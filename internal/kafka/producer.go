@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	"os"
 )
 
 func Producer(file multipart.File, filename string) {
@@ -33,7 +34,7 @@ func Producer(file multipart.File, filename string) {
 
 func GetKafkaWriter() kafka.Writer {
 	return kafka.Writer{
-		Addr:       kafka.TCP(Host),
+		Addr:       kafka.TCP(os.Getenv("kafka_address")),
 		Topic:      TopicName,
 		BatchBytes: constant.FileMaxSize,
 	}

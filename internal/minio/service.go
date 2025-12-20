@@ -6,26 +6,35 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
+	"os"
 )
 
 func Upsert(filename string, content []byte) {
 	ctx := context.Background()
+	minioClient := getMinIOClient()
 
-	minioClient, err := minio.New(Endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(AccessKeyID, SecretAccessKey, Token),
+	bucketInit(minioClient, ctx)
+
+	reader := bytes.NewReader(content)
+	_, err := minioClient.PutObject(ctx, BucketName, filename, reader, int64(len(content)), minio.PutObjectOptions{})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func getMinIOClient() *minio.Client {
+	minioClient, err := minio.New(os.Getenv("minio_address"), &minio.Options{
+		Creds: credentials.NewStaticV4(
+			os.Getenv("minio_access_key_id"),
+			os.Getenv("minio_secret_access_key"),
+			os.Getenv("minio_token"),
+		),
 		Secure: UseSSL,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	bucketInit(minioClient, ctx)
-
-	reader := bytes.NewReader(content)
-	_, err = minioClient.PutObject(ctx, BucketName, filename, reader, int64(len(content)), minio.PutObjectOptions{})
-	if err != nil {
-		log.Fatal(err)
-	}
+	return minioClient
 }
 
 func bucketInit(minioClient *minio.Client, ctx context.Context) {

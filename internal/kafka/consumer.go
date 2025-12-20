@@ -5,6 +5,7 @@ import (
 	"github.com/segmentio/kafka-go"
 	"graduate_backend_image_microservice_go/internal/minio"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -31,7 +32,7 @@ func Consumer() {
 
 func GetKafkaReader() *kafka.Reader {
 	return kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{Host},
+		Brokers: []string{os.Getenv("kafka_address")},
 		Topic:   TopicName,
 		GroupID: consumerGroup,
 	})

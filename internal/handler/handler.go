@@ -5,6 +5,7 @@ import (
 	"graduate_backend_image_microservice_go/internal/service"
 	"log"
 	"net/http"
+	"os"
 )
 
 const prefix = "/api/v1/image"
@@ -30,5 +31,5 @@ func Post(w http.ResponseWriter, r *http.Request) {
 func Handler() {
 	http.HandleFunc(prefix+"/", Post)
 
-	log.Fatal(http.ListenAndServe(":5267", nil))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("handler_port"), nil))
 }
