@@ -18,7 +18,7 @@ func Consumer() {
 	for {
 		msg, err := reader.ReadMessage(context.Background())
 		if err != nil {
-			log.Fatal(err)
+			log.Panic(err)
 		}
 
 		msgStr := string(msg.Value)

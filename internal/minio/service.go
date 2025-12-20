@@ -18,7 +18,7 @@ func Upsert(filename string, content []byte) {
 	reader := bytes.NewReader(content)
 	_, err := minioClient.PutObject(ctx, BucketName, filename, reader, int64(len(content)), minio.PutObjectOptions{})
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
@@ -32,7 +32,7 @@ func getMinIOClient() *minio.Client {
 		Secure: UseSSL,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return minioClient
 }
@@ -40,12 +40,12 @@ func getMinIOClient() *minio.Client {
 func bucketInit(minioClient *minio.Client, ctx context.Context) {
 	exists, err := minioClient.BucketExists(ctx, BucketName)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	if !exists {
 		err := minioClient.MakeBucket(ctx, BucketName, minio.MakeBucketOptions{})
 		if err != nil {
-			log.Fatal(err)
+			log.Panic(err)
 		}
 	}
 }

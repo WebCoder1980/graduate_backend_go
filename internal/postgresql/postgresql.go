@@ -12,7 +12,7 @@ import (
 func getConnStr() string {
 	port, err := strconv.Atoi(os.Getenv("postgresql_port"))
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	return fmt.Sprintf(
@@ -30,10 +30,10 @@ func getConnection() *sql.DB {
 	connStr := getConnStr()
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	if err = db.Ping(); err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	return db

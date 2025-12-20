@@ -31,5 +31,5 @@ func Post(w http.ResponseWriter, r *http.Request) {
 func Handler() {
 	http.HandleFunc(prefix+"/", Post)
 
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("handler_port"), nil))
+	log.Panic(http.ListenAndServe(":"+os.Getenv("handler_port"), nil))
 }

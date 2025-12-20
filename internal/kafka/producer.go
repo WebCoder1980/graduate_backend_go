@@ -18,7 +18,7 @@ func Producer(file multipart.File, filename string) {
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	bytesResult := append([]byte(filename), EndFileName...)
@@ -28,7 +28,7 @@ func Producer(file multipart.File, filename string) {
 		Value: bytesResult,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
