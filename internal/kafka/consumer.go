@@ -8,18 +8,16 @@ import (
 	"strings"
 )
 
+const consumerGroup = "group0"
+
 func Consumer() {
-	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
-		Topic:   "image-topic",
-		GroupID: "group0",
-	})
+	reader := GetKafkaReader()
 	defer reader.Close()
 
 	for {
 		msg, err := reader.ReadMessage(context.Background())
 		if err != nil {
-			log.Fatal("Ошибка при получении:", err)
+			log.Fatal(err)
 		}
 
 		msgStr := string(msg.Value)
@@ -29,4 +27,12 @@ func Consumer() {
 
 		minio.Upsert(filename, file)
 	}
+}
+
+func GetKafkaReader() *kafka.Reader {
+	return kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{Host},
+		Topic:   TopicName,
+		GroupID: consumerGroup,
+	})
 }

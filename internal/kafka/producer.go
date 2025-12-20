@@ -12,11 +12,7 @@ import (
 func Producer(file multipart.File, filename string) {
 	ctx := context.Background()
 
-	writer := kafka.Writer{
-		Addr:       kafka.TCP("localhost:9092"),
-		Topic:      "image-topic",
-		BatchBytes: constant.FileMaxSize,
-	}
+	writer := GetKafkaWriter()
 	defer writer.Close()
 
 	fileBytes, err := io.ReadAll(file)
@@ -31,6 +27,14 @@ func Producer(file multipart.File, filename string) {
 		Value: bytesResult,
 	})
 	if err != nil {
-		log.Fatal("Ошибка при отправке:", err)
+		log.Fatal(err)
+	}
+}
+
+func GetKafkaWriter() kafka.Writer {
+	return kafka.Writer{
+		Addr:       kafka.TCP(Host),
+		Topic:      TopicName,
+		BatchBytes: constant.FileMaxSize,
 	}
 }
