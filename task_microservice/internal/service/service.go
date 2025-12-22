@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"graduate_backend_image_microservice_go/internal/kafka"
-	"graduate_backend_image_microservice_go/internal/postgresql"
+	"graduate_backend_task_microservice/internal/kafka"
+	"graduate_backend_task_microservice/internal/postgresql"
 	"mime/multipart"
 	"strconv"
 	"strings"

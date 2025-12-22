@@ -3,7 +3,7 @@ package kafka
 import (
 	"context"
 	"github.com/segmentio/kafka-go"
-	"graduate_backend_image_microservice_go/internal/constant"
+	"graduate_backend_task_microservice/internal/constant"
 	"io"
 	"log"
 	"mime/multipart"

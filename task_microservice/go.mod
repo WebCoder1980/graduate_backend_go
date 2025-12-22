@@ -1,4 +1,4 @@
-module graduate_backend_image_microservice_go
+module graduate_backend_task_microservice
 
 go 1.25.4
 

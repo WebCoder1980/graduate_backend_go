@@ -2,15 +2,15 @@ package handler
 
 import (
 	"context"
-	"graduate_backend_image_microservice_go/internal/constant"
-	"graduate_backend_image_microservice_go/internal/service"
+	"graduate_backend_task_microservice/internal/constant"
+	"graduate_backend_task_microservice/internal/service"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 )
 
-const prefix = "/api/v1/image"
+const prefix = "/api/v1/task"
 
 type Handler struct {
 	service *service.Service

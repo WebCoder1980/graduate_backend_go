@@ -2,5 +2,5 @@ package minio
 
 const (
 	UseSSL     = false
-	BucketName = "imagebucket"
+	BucketName = "image"
 )

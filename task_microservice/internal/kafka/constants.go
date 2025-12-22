@@ -1,6 +1,6 @@
 package kafka
 
 const (
-	TopicName   = "image_topic"
+	TopicName   = "task_request"
 	EndFileName = "---END FILE NAME---"
 )

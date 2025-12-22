@@ -2,8 +2,8 @@ package app
 
 import (
 	"context"
-	"graduate_backend_image_microservice_go/internal/handler"
-	"graduate_backend_image_microservice_go/internal/kafka"
+	"graduate_backend_task_microservice/internal/handler"
+	"graduate_backend_task_microservice/internal/kafka"
 	"log"
 	"sync"
 )
