@@ -28,7 +28,7 @@ func NewService(ctx context.Context) (*Service, error) {
 }
 
 func (s *Service) Post(file multipart.File, filename string) (int64, error) {
-	imageId, err := s.postgresql.CreateImage(filename)
+	imageId, err := s.postgresql.TaskCreate(filename)
 	if err != nil {
 		return -1, err
 	}

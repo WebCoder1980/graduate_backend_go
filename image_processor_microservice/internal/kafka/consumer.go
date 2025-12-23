@@ -3,10 +3,15 @@ package kafka
 import (
 	"context"
 	"github.com/segmentio/kafka-go"
-	"graduate_backend_task_microservice/internal/minio"
+	"graduate_backend_image_processor_microservice/internal/minio"
 	"log"
 	"os"
 	"strings"
+)
+
+const (
+	TopicName   = "task_request"
+	EndFileName = "---END FILE NAME---"
 )
 
 type Consumer struct {
