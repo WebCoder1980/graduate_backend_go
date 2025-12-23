@@ -7,6 +7,11 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
 	"os"
+	"strconv"
+)
+
+const (
+	BucketName = "image-result"
 )
 
 type Client struct {
@@ -15,13 +20,17 @@ type Client struct {
 }
 
 func NewClient(ctx context.Context) (*Client, error) {
+	useSsl, err := strconv.ParseBool(os.Getenv("minio_use_ssl"))
+	if err != nil {
+		return nil, err
+	}
 	minioClient, err := minio.New(os.Getenv("minio_address"), &minio.Options{
 		Creds: credentials.NewStaticV4(
 			os.Getenv("minio_access_key_id"),
 			os.Getenv("minio_secret_access_key"),
 			os.Getenv("minio_token"),
 		),
-		Secure: UseSSL,
+		Secure: useSsl,
 	})
 	if err != nil {
 		return nil, err
