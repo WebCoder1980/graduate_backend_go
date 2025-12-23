@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/segmentio/kafka-go"
 	"graduate_backend_task_microservice/internal/constant"
-	"io"
 	"log"
-	"mime/multipart"
 	"os"
+)
+
+const (
+	TopicName = "task_request"
 )
 
 type Producer struct {
@@ -28,17 +30,9 @@ func NewProducer(ctx context.Context) *Producer {
 	}
 }
 
-func (p *Producer) Write(file multipart.File, filename string) {
-	fileBytes, err := io.ReadAll(file)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	bytesResult := append([]byte(filename), EndFileName...)
-	bytesResult = append(bytesResult, fileBytes...)
-
-	err = p.kafkaWriter.WriteMessages(p.ctx, kafka.Message{
-		Value: bytesResult,
+func (p *Producer) Write(filename string) {
+	err := p.kafkaWriter.WriteMessages(p.ctx, kafka.Message{
+		Value: []byte(filename),
 	})
 	if err != nil {
 		log.Panic(err)

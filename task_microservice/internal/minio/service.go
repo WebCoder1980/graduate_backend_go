@@ -5,15 +5,13 @@ import (
 	"context"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"io"
 	"log"
 	"os"
 	"strconv"
 )
 
 const (
-	BucketSourceName = "image-source"
-	BucketTargetName = "image-result"
+	BucketName = "image-source"
 )
 
 type Client struct {
@@ -48,36 +46,22 @@ func NewClient(ctx context.Context) (*Client, error) {
 	return cli, nil
 }
 
-func (c *Client) Get(filename string) ([]byte, error) {
-	object, err := c.minioClient.GetObject(c.ctx, BucketSourceName, filename, minio.GetObjectOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := io.ReadAll(object)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
 func (c *Client) Upsert(content []byte, filename string) {
 	reader := bytes.NewReader(content)
-	_, err := c.minioClient.PutObject(c.ctx, BucketTargetName, filename, reader, int64(len(content)), minio.PutObjectOptions{})
+	_, err := c.minioClient.PutObject(c.ctx, BucketName, filename, reader, int64(len(content)), minio.PutObjectOptions{})
 	if err != nil {
 		log.Panic(err)
 	}
 }
 
 func (c *Client) bucketInit() error {
-	exists, err := c.minioClient.BucketExists(c.ctx, BucketTargetName)
+	exists, err := c.minioClient.BucketExists(c.ctx, BucketName)
 	if err != nil {
 		return err
 	}
 
 	if !exists {
-		err = c.minioClient.MakeBucket(c.ctx, BucketTargetName, minio.MakeBucketOptions{})
+		err = c.minioClient.MakeBucket(c.ctx, BucketName, minio.MakeBucketOptions{})
 		if err != nil {
 			return err
 		}

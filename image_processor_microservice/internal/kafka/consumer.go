@@ -6,12 +6,10 @@ import (
 	"graduate_backend_image_processor_microservice/internal/minio"
 	"log"
 	"os"
-	"strings"
 )
 
 const (
-	TopicName   = "task_request"
-	EndFileName = "---END FILE NAME---"
+	TopicName = "task_request"
 )
 
 type Consumer struct {
@@ -48,11 +46,13 @@ func (c *Consumer) Start() {
 			log.Panic(err)
 		}
 
-		msgStr := string(msg.Value)
-		offset := strings.Index(msgStr, EndFileName)
-		file := msg.Value[(offset + len(EndFileName)):]
-		filename := msgStr[:offset]
+		filename := string(msg.Value)
 
-		c.minioClient.Upsert(filename, file)
+		source, err := c.minioClient.Get(filename)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		c.minioClient.Upsert(source, filename)
 	}
 }
