@@ -52,6 +52,8 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (h *Handler) TaskIdHandler(w http.ResponseWriter, r *http.Request) {
