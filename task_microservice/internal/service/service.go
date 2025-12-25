@@ -89,17 +89,12 @@ func (s *Service) Post(files *multipart.Form) (int64, error) {
 		return -1, nil
 	}
 
-	statusId, err := s.postgresql.ImageStatusByName("Обрабатывается")
-	if err != nil {
-		return -1, err
-	}
-
 	for i, v2 := range files.File["file"] {
 		imageInfo := model.ImageInfo{
 			Filename: v2.Filename,
 			TaskId:   taskId,
 			Position: i + 1,
-			StatusId: statusId,
+			StatusId: constant.StatusInWork,
 		}
 
 		imageInfo.Format = strings.ToLower(imageInfo.Filename[strings.LastIndex(imageInfo.Filename, ".")+1:])
@@ -133,12 +128,7 @@ func (s *Service) Post(files *multipart.Form) (int64, error) {
 }
 
 func (s *Service) TaskUpdateStatus(imageStatus model.ImageStatus) error {
-	newStatusId, err := s.postgresql.ImageStatusByName("Успех")
-	if err != nil {
-		return err
-	}
-
-	err = s.postgresql.TaskUpdateStatus(imageStatus, newStatusId)
+	err := s.postgresql.TaskUpdateStatus(imageStatus, constant.StatusSuccessful)
 
 	if err != nil {
 		return err

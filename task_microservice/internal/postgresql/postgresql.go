@@ -145,13 +145,3 @@ func (p *PostgreSQL) TaskUpdateStatus(imageStatus model.ImageStatus, newStatusId
 
 	return nil
 }
-
-func (p *PostgreSQL) ImageStatusByName(name string) (int64, error) {
-	row := p.db.QueryRow("SELECT id FROM image_status WHERE name=$1", name)
-	var result int64
-	err := row.Scan(&result)
-	if err != nil {
-		return -1, err
-	}
-	return result, nil
-}
