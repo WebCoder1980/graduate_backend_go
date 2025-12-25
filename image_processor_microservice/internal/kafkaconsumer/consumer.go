@@ -2,7 +2,9 @@ package kafkaconsumer
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/segmentio/kafka-go"
+	"graduate_backend_image_processor_microservice/internal/model"
 	"graduate_backend_image_processor_microservice/internal/service"
 	"log"
 	"os"
@@ -46,9 +48,13 @@ func (c *Consumer) Start() {
 			log.Panic(err)
 		}
 
-		filename := string(msg.Value)
+		var imageInfo model.ImageInfo
+		err = json.Unmarshal(msg.Value, &imageInfo)
+		if err != nil {
+			log.Panic(err)
+		}
 
-		err = c.service.ImageProcessor(filename)
+		err = c.service.ImageProcessor(&imageInfo)
 		if err != nil {
 			log.Panic(err)
 		}

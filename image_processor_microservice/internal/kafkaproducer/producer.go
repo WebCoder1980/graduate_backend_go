@@ -2,10 +2,10 @@ package kafkaproducer
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/segmentio/kafka-go"
-	"log"
+	"graduate_backend_image_processor_microservice/internal/model"
 	"os"
-	"strconv"
 )
 
 const (
@@ -53,11 +53,18 @@ func initTopic() error {
 	return nil
 }
 
-func (p *Producer) Write(imageId int64) {
-	err := p.kafkaWriter.WriteMessages(p.ctx, kafka.Message{
-		Value: []byte(strconv.FormatInt(imageId, 10)),
+func (p *Producer) Write(imageStatus model.ImageStatus) error {
+	data, err := json.Marshal(imageStatus)
+	if err != nil {
+		return err
+	}
+
+	err = p.kafkaWriter.WriteMessages(p.ctx, kafka.Message{
+		Value: data,
 	})
 	if err != nil {
-		log.Panic(err)
+		return err
 	}
+
+	return nil
 }

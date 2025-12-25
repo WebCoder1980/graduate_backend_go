@@ -2,8 +2,9 @@ package kafkaproducer
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/segmentio/kafka-go"
-	"log"
+	"graduate_backend_task_microservice/internal/model"
 	"os"
 )
 
@@ -52,11 +53,18 @@ func initTopic() error {
 	return nil
 }
 
-func (p *Producer) Write(filename string) {
-	err := p.kafkaWriter.WriteMessages(p.ctx, kafka.Message{
-		Value: []byte(filename),
+func (p *Producer) Write(filename *model.ImageInfo) error {
+	data, err := json.Marshal(filename)
+	if err != nil {
+		return err
+	}
+
+	err = p.kafkaWriter.WriteMessages(p.ctx, kafka.Message{
+		Value: data,
 	})
 	if err != nil {
-		log.Panic(err)
+		return err
 	}
+
+	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"graduate_backend_task_microservice/internal/kafkaproducer"
 	"graduate_backend_task_microservice/internal/minio"
+	"graduate_backend_task_microservice/internal/model"
 	"graduate_backend_task_microservice/internal/postgresql"
 	"io"
 	"mime/multipart"
@@ -48,7 +49,32 @@ func (s *Service) Post(files *multipart.Form) (int64, error) {
 		return -1, errors.New("файл отсутствует")
 	}
 
-	for _, v2 := range files.File["file"] {
+	taskId, err := s.postgresql.TaskCreate()
+	if err != nil {
+		return -1, nil
+	}
+
+	statusId, err := s.postgresql.ImageStatusByName("Обрабатывается")
+	if err != nil {
+		return -1, err
+	}
+
+	for i, v2 := range files.File["file"] {
+		imageInfo := model.ImageInfo{
+			Filename: v2.Filename,
+			TaskId:   taskId,
+			Position: i + 1,
+			StatusId: statusId,
+		}
+
+		imageInfo.Format = strings.ToLower(imageInfo.Filename[strings.LastIndex(imageInfo.Filename, ".")+1:])
+
+		imageId, err := s.postgresql.ImageCreate(imageInfo)
+		if err != nil {
+			return -1, err
+		}
+		imageInfo.Id = imageId
+
 		val, err := v2.Open()
 		if err != nil {
 			return -1, err
@@ -59,32 +85,26 @@ func (s *Service) Post(files *multipart.Form) (int64, error) {
 			return -1, err
 		}
 
-		filename := v2.Filename
-
-		taskId, err := s.postgresql.TaskCreate(filename)
-		if err != nil {
-			return -1, err
-		}
-
-		fileFormat := strings.ToLower(filename[strings.LastIndex(filename, ".")+1:])
-		minioFilename := strconv.FormatInt(taskId, 10) + "." + fileFormat
+		minioFilename := strconv.FormatInt(imageInfo.TaskId, 10) + "_" + strconv.Itoa(imageInfo.Position) + "." + imageInfo.Format
 
 		s.minioClient.Upsert(fileBytes, minioFilename)
 
-		s.kafkaProducer.Write(minioFilename)
-
-		return taskId, nil
+		err = s.kafkaProducer.Write(&imageInfo)
+		if err != nil {
+			return -1, err
+		}
 	}
-	return -1, errors.New("файл отсутствует")
+	return taskId, nil
 }
 
-func (s *Service) TaskUpdateStatus(taskId int64) error {
-	statusId, err := s.postgresql.TaskStatusByName("Успех")
+func (s *Service) TaskUpdateStatus(imageStatus model.ImageStatus) error {
+	newStatusId, err := s.postgresql.ImageStatusByName("Успех")
 	if err != nil {
 		return err
 	}
 
-	err = s.postgresql.TaskUpdateStatus(taskId, statusId)
+	err = s.postgresql.TaskUpdateStatus(imageStatus, newStatusId)
+
 	if err != nil {
 		return err
 	}

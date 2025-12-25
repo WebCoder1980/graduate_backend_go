@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"graduate_backend_task_microservice/internal/model"
 	"log"
 	"os"
 	"strconv"
@@ -49,28 +50,34 @@ func (p *PostgreSQL) init() error {
 	}
 
 	_, err := p.db.Exec(`
-		CREATE TABLE IF NOT EXISTS task_status(
+		CREATE TABLE IF NOT EXISTS task(
+			id BIGSERIAL PRIMARY KEY
+		);
+		CREATE TABLE IF NOT EXISTS image_status(
 		    id BIGSERIAL PRIMARY KEY,
 		    name TEXT NOT NULL UNIQUE
 		);
-		CREATE TABLE IF NOT EXISTS task(
-			id BIGSERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			status_id BIGINT REFERENCES task_status(id) NOT NULL
-		);
+		CREATE TABLE IF NOT EXISTS image(
+		    id BIGSERIAL PRIMARY KEY,
+		    task_id BIGINT REFERENCES task(id) NOT NULL,
+		    position INT NOT NULL,
+		    name TEXT NOT NULL,
+		    format TEXT NOT NULL,
+		    status_id BIGINT REFERENCES image_status(id) NOT NULL
+		)
 	`)
 	if err != nil {
 		return err
 	}
 
-	queryRowRes := p.db.QueryRow("SELECT COUNT(*) FROM task_status")
+	queryRowRes := p.db.QueryRow("SELECT COUNT(*) FROM image_status")
 	var count int64
 	err = queryRowRes.Scan(&count)
 	if err != nil {
 		return err
 	}
 	if count == 0 {
-		_, err = p.db.Exec("INSERT INTO task_status(name) VALUES ('Обрабатывается'), ('Успех'), ('Ошибка')")
+		_, err = p.db.Exec("INSERT INTO image_status(name) VALUES ('Обрабатывается'), ('Успех'), ('Ошибка')")
 		if err != nil {
 			return err
 		}
@@ -79,27 +86,32 @@ func (p *PostgreSQL) init() error {
 	return nil
 }
 
-func (p *PostgreSQL) TaskCreate(name string) (int64, error) {
-	taskTypeId, err := p.TaskStatusByName("Обрабатывается")
-	if err != nil {
-		return -1, err
-	}
-
-	row := p.db.QueryRow("INSERT INTO task (name, status_id) VALUES ($1, $2) RETURNING id", name, taskTypeId)
+func (p *PostgreSQL) TaskCreate() (int64, error) {
+	row := p.db.QueryRow("INSERT INTO task DEFAULT VALUES RETURNING id")
 	var resultId int64
-	err = row.Scan(&resultId)
+	err := row.Scan(&resultId)
 	if err != nil {
 		return -1, err
 	}
 	return resultId, nil
 }
 
-func (p *PostgreSQL) TaskUpdateStatus(taskId int64, statusId int64) error {
+func (p *PostgreSQL) ImageCreate(imageInfo model.ImageInfo) (int64, error) {
+	row := p.db.QueryRow("INSERT INTO image (task_id, position, name, format, status_id) VALUES ($1, $2, $3, $4, $5) RETURNING id", imageInfo.TaskId, imageInfo.Position, imageInfo.Filename, imageInfo.Format, imageInfo.StatusId)
+	var resultId int64
+	err := row.Scan(&resultId)
+	if err != nil {
+		return -1, err
+	}
+	return resultId, nil
+}
+
+func (p *PostgreSQL) TaskUpdateStatus(imageStatus model.ImageStatus, newStatusId int64) error {
 	_, err := p.db.Exec(`
-		UPDATE task
+		UPDATE image
 		SET status_id = $1
-		WHERE id = $2
-	`, statusId, taskId)
+		WHERE task_id=$2 AND position=$3
+	`, newStatusId, imageStatus.TaskId, imageStatus.Position)
 	if err != nil {
 		return err
 	}
@@ -107,8 +119,8 @@ func (p *PostgreSQL) TaskUpdateStatus(taskId int64, statusId int64) error {
 	return nil
 }
 
-func (p *PostgreSQL) TaskStatusByName(name string) (int64, error) {
-	row := p.db.QueryRow("SELECT id FROM task_status WHERE name=$1", name)
+func (p *PostgreSQL) ImageStatusByName(name string) (int64, error) {
+	row := p.db.QueryRow("SELECT id FROM image_status WHERE name=$1", name)
 	var result int64
 	err := row.Scan(&result)
 	if err != nil {

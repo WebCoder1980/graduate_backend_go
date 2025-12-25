@@ -26,11 +26,11 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 
 	files := r.MultipartForm
 
-	fileId, err := h.service.Post(files)
+	taskId, err := h.service.Post(files)
 	if err != nil {
 		log.Panic(err)
 	}
-	_, err = w.Write([]byte(strconv.FormatInt(fileId, 10)))
+	_, err = w.Write([]byte(strconv.FormatInt(taskId, 10)))
 	if err != nil {
 		log.Panic(err)
 	}

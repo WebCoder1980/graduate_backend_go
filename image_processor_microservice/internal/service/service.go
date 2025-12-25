@@ -4,9 +4,9 @@ import (
 	"context"
 	"graduate_backend_image_processor_microservice/internal/kafkaproducer"
 	"graduate_backend_image_processor_microservice/internal/minio"
+	"graduate_backend_image_processor_microservice/internal/model"
 	"graduate_backend_image_processor_microservice/internal/postgresql"
 	"strconv"
-	"strings"
 )
 
 type Service struct {
@@ -40,22 +40,28 @@ func NewService(ctx context.Context) (*Service, error) {
 	}, nil
 }
 
-func (s *Service) ImageProcessor(filename string) error {
-	source, err := s.minioClient.Get(filename)
+func (s *Service) ImageProcessor(imageInfo *model.ImageInfo) error {
+	minioFilename := strconv.FormatInt(imageInfo.TaskId, 10) + "_" + strconv.Itoa(imageInfo.Position) + "." + imageInfo.Format
+
+	source, err := s.minioClient.Get(minioFilename)
 	if err != nil {
 		return err
 	}
 
-	err = s.minioClient.Upsert(source, filename)
+	err = s.minioClient.Upsert(source, minioFilename)
 	if err != nil {
 		return err
 	}
 
-	seperator := strings.LastIndex(filename, ".")
+	imageStatus := model.ImageStatus{
+		TaskId:   imageInfo.TaskId,
+		Position: imageInfo.Position,
+	}
 
-	imageId, err := strconv.ParseInt(filename[:seperator], 10, 64)
-
-	s.kafkaProducer.Write(imageId)
+	err = s.kafkaProducer.Write(imageStatus)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

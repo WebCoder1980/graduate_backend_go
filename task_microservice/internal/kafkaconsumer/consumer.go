@@ -2,11 +2,12 @@ package kafkaconsumer
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/segmentio/kafka-go"
+	"graduate_backend_task_microservice/internal/model"
 	"graduate_backend_task_microservice/internal/service"
 	"log"
 	"os"
-	"strconv"
 )
 
 const (
@@ -48,11 +49,13 @@ func (c *Consumer) Start() {
 			log.Panic(err)
 		}
 
-		taskId, err := strconv.ParseInt(string(msg.Value), 10, 64)
+		var imageStatus model.ImageStatus
+		err = json.Unmarshal(msg.Value, &imageStatus)
 		if err != nil {
 			log.Panic(err)
 		}
-		err = c.service.TaskUpdateStatus(taskId)
+
+		err = c.service.TaskUpdateStatus(imageStatus)
 		if err != nil {
 			log.Panic(err)
 		}
