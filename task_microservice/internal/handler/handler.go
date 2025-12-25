@@ -23,6 +23,7 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r.ParseMultipartForm(constant.FileMaxSize)
+	w.WriteHeader(http.StatusCreated)
 
 	files := r.MultipartForm
 
@@ -46,7 +47,7 @@ func NewHandler(ctx context.Context) (*Handler, error) {
 }
 
 func (h *Handler) Start() {
-	http.HandleFunc(prefix+"/", h.Post)
+	http.HandleFunc(prefix, h.Post)
 
 	log.Panic(http.ListenAndServe(":"+os.Getenv("handler_port"), nil))
 }
