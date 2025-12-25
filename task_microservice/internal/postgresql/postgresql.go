@@ -133,12 +133,12 @@ func (p *PostgreSQL) ImageCreate(imageInfo model.ImageInfo) (int64, error) {
 	return resultId, nil
 }
 
-func (p *PostgreSQL) TaskUpdateStatus(imageStatus model.ImageStatus, newStatusId int64) error {
+func (p *PostgreSQL) ImageUpdateStatus(imageStatus model.ImageStatus) error {
 	_, err := p.db.Exec(`
 		UPDATE image
 		SET status_id = $1
 		WHERE task_id=$2 AND position=$3
-	`, newStatusId, imageStatus.TaskId, imageStatus.Position)
+	`, imageStatus.StatusId, imageStatus.TaskId, imageStatus.Position)
 	if err != nil {
 		return err
 	}

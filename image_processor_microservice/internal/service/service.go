@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"graduate_backend_image_processor_microservice/internal/constant"
 	"graduate_backend_image_processor_microservice/internal/kafkaproducer"
 	"graduate_backend_image_processor_microservice/internal/minio"
 	"graduate_backend_image_processor_microservice/internal/model"
@@ -48,6 +49,16 @@ func (s *Service) ImageProcessor(imageInfo *model.ImageInfo) error {
 		return err
 	}
 
+	// TODO processing
+
+	imageInfo.StatusId = constant.StatusSuccessful
+
+	imageId, err := s.postgresql.ImageCreate(*imageInfo)
+	if err != nil {
+		return err
+	}
+	imageInfo.Id = imageId
+
 	err = s.minioClient.Upsert(source, minioFilename)
 	if err != nil {
 		return err
@@ -56,6 +67,7 @@ func (s *Service) ImageProcessor(imageInfo *model.ImageInfo) error {
 	imageStatus := model.ImageStatus{
 		TaskId:   imageInfo.TaskId,
 		Position: imageInfo.Position,
+		StatusId: imageInfo.StatusId,
 	}
 
 	err = s.kafkaProducer.Write(imageStatus)

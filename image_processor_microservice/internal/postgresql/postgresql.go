@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"graduate_backend_image_processor_microservice/internal/model"
 	"log"
 	"os"
 	"strconv"
@@ -48,5 +49,46 @@ func (p *PostgreSQL) init() error {
 		return err
 	}
 
+	_, err := p.db.Exec(`
+		CREATE TABLE IF NOT EXISTS image_status(
+		    id BIGINT PRIMARY KEY,
+		    name TEXT NOT NULL UNIQUE
+		);
+		CREATE TABLE IF NOT EXISTS image(
+		    id BIGSERIAL PRIMARY KEY,
+		    task_id BIGINT NOT NULL,
+		    position INT NOT NULL,
+		    name TEXT NOT NULL,
+		    format TEXT NOT NULL,
+		    status_id BIGINT REFERENCES image_status(id) NOT NULL
+		)
+	`)
+	if err != nil {
+		return err
+	}
+
+	queryRowRes := p.db.QueryRow("SELECT COUNT(*) FROM image_status")
+	var count int64
+	err = queryRowRes.Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		_, err = p.db.Exec("INSERT INTO image_status(id, name) VALUES (1, 'Обрабатывается'), (2, 'Успех'), (3, 'Ошибка')")
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func (p *PostgreSQL) ImageCreate(imageInfo model.ImageInfo) (int64, error) {
+	row := p.db.QueryRow("INSERT INTO image (task_id, position, name, format, status_id) VALUES ($1, $2, $3, $4, $5) RETURNING id", imageInfo.TaskId, imageInfo.Position, imageInfo.Filename, imageInfo.Format, imageInfo.StatusId)
+	var resultId int64
+	err := row.Scan(&resultId)
+	if err != nil {
+		return -1, err
+	}
+	return resultId, nil
 }

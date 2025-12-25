@@ -128,7 +128,7 @@ func (s *Service) Post(files *multipart.Form) (int64, error) {
 }
 
 func (s *Service) TaskUpdateStatus(imageStatus model.ImageStatus) error {
-	err := s.postgresql.TaskUpdateStatus(imageStatus, constant.StatusSuccessful)
+	err := s.postgresql.ImageUpdateStatus(imageStatus)
 
 	if err != nil {
 		return err

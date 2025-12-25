@@ -12,5 +12,5 @@ type ImageInfo struct {
 type ImageStatus struct {
 	TaskId   int64
 	Position int
-	//StatusId int64 TODO
+	StatusId int64
 }
