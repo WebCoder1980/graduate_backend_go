@@ -38,8 +38,7 @@ func (h *Handler) TaskHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(constant.FileMaxSize)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		log.Panic(err)
 	}
 
 	files := r.MultipartForm
@@ -53,8 +52,6 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Panic(err)
 	}
-
-	w.WriteHeader(http.StatusCreated)
 }
 
 func (h *Handler) TaskIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -70,25 +67,25 @@ func (h *Handler) TaskGetById(w http.ResponseWriter, r *http.Request) {
 	taskId, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return
+		log.Panic(err)
 	}
 
 	result, err := h.service.GetImagesByTaskId(taskId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		return
+		log.Panic(err)
 	}
 
 	data, err := json.Marshal(result)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		return
+		log.Panic(err)
 	}
 
 	_, err = w.Write(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		return
+		log.Panic(err)
 	}
 }
 

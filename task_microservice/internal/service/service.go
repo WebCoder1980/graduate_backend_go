@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"graduate_backend_task_microservice/internal/constant"
 	"graduate_backend_task_microservice/internal/kafkaproducer"
 	"graduate_backend_task_microservice/internal/minio"
 	"graduate_backend_task_microservice/internal/model"
@@ -50,25 +51,26 @@ func (s *Service) GetImagesByTaskId(taskId int64) (model.TaskResponse, error) {
 		return model.TaskResponse{}, err
 	}
 
-	var commonStatusId int64 = 2 // TODO
+	var commonStatusId int64 = constant.StatusSuccessful
 
 	isWork, isFailed := false, false
 
 	for _, val := range images {
 		switch val.StatusId {
-		case 1: // TODO
+		case constant.StatusInWork:
 			isWork = true
-		case 3: // TODO
+		case constant.StatusFailed:
 			isFailed = true
 			break
+		default:
 		}
 	}
 
 	if isWork {
-		commonStatusId = 1 // TODO
+		commonStatusId = constant.StatusInWork
 	}
 	if isFailed {
-		commonStatusId = 3 // TODO
+		commonStatusId = constant.StatusFailed
 	}
 
 	return model.TaskResponse{
