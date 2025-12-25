@@ -16,14 +16,30 @@ type Handler struct {
 	service *service.Service
 }
 
-func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusNotFound)
-		return
+func NewHandler(ctx context.Context) (*Handler, error) {
+	serv, err := service.NewService(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	r.ParseMultipartForm(constant.FileMaxSize)
-	w.WriteHeader(http.StatusCreated)
+	return &Handler{service: serv}, nil
+}
+
+func (h *Handler) TaskHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		h.TaskPost(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(constant.FileMaxSize)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	files := r.MultipartForm
 
@@ -35,19 +51,12 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Panic(err)
 	}
-}
 
-func NewHandler(ctx context.Context) (*Handler, error) {
-	service, err := service.NewService(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Handler{service: service}, nil
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (h *Handler) Start() {
-	http.HandleFunc(prefix, h.Post)
+	http.HandleFunc(prefix, h.TaskHandler)
 
 	log.Panic(http.ListenAndServe(":"+os.Getenv("handler_port"), nil))
 }
