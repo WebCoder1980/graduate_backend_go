@@ -48,13 +48,13 @@ func (c *Consumer) Start() {
 			log.Panic(err)
 		}
 
-		var imageInfo model.ImageInfo
-		err = json.Unmarshal(msg.Value, &imageInfo)
+		var imageRequest model.ImageRequest
+		err = json.Unmarshal(msg.Value, &imageRequest)
 		if err != nil {
 			log.Panic(err)
 		}
 
-		err = c.service.ImageProcessor(&imageInfo)
+		err = c.service.ImageProcessor(&imageRequest)
 		if err != nil {
 			log.Panic(err)
 		}

@@ -60,16 +60,16 @@ func (s *Service) ImageGetById(imageId int64) ([]byte, error) {
 	return data, err
 }
 
-func (s *Service) ImageProcessor(imageInfo *model.ImageInfo) error {
-	imageInfo.StatusId = constant.StatusSuccessful
-
-	minioFilename := strconv.FormatInt(imageInfo.TaskId, 10) + "_" + strconv.Itoa(imageInfo.Position) + "." + imageInfo.Format
+func (s *Service) ImageProcessor(imageRequest *model.ImageRequest) error {
+	imageRequest.StatusId = constant.StatusSuccessful
+	
+	minioFilename := strconv.FormatInt(imageRequest.TaskId, 10) + "_" + strconv.Itoa(imageRequest.Position) + "." + imageRequest.Format
 
 	source, err := s.minioClient.Get(minio.BucketSourceName, minioFilename)
 	if err != nil {
-		imageInfo.StatusId = constant.StatusFailed
-		imageInfo.EndDT = time.Now()
-		err2 := s.ImageProcessorKafkaWrite(imageInfo)
+		imageRequest.StatusId = constant.StatusFailed
+		imageRequest.EndDT = time.Now()
+		err2 := s.ImageProcessorKafkaWrite(imageRequest)
 		if err2 != nil {
 			return errors.New(err.Error() + "; " + err2.Error())
 		}
@@ -78,31 +78,31 @@ func (s *Service) ImageProcessor(imageInfo *model.ImageInfo) error {
 
 	// TODO processing
 
-	imageId, err := s.postgresql.ImageCreate(*imageInfo)
+	imageId, err := s.postgresql.ImageCreate(*imageRequest)
 	if err != nil {
-		imageInfo.StatusId = constant.StatusFailed
-		imageInfo.EndDT = time.Now()
-		err2 := s.ImageProcessorKafkaWrite(imageInfo)
+		imageRequest.StatusId = constant.StatusFailed
+		imageRequest.EndDT = time.Now()
+		err2 := s.ImageProcessorKafkaWrite(imageRequest)
 		if err2 != nil {
 			return errors.New(err.Error() + "; " + err2.Error())
 		}
 		return nil
 	}
-	imageInfo.Id = imageId
+	imageRequest.Id = imageId
 
 	err = s.minioClient.Upsert(source, minioFilename)
 	if err != nil {
-		imageInfo.StatusId = constant.StatusFailed
-		imageInfo.EndDT = time.Now()
-		err2 := s.ImageProcessorKafkaWrite(imageInfo)
+		imageRequest.StatusId = constant.StatusFailed
+		imageRequest.EndDT = time.Now()
+		err2 := s.ImageProcessorKafkaWrite(imageRequest)
 		if err2 != nil {
 			return errors.New(err.Error() + "; " + err2.Error())
 		}
 		return nil
 	}
 
-	imageInfo.EndDT = time.Now()
-	err = s.ImageProcessorKafkaWrite(imageInfo)
+	imageRequest.EndDT = time.Now()
+	err = s.ImageProcessorKafkaWrite(imageRequest)
 	if err != nil {
 		return err
 	}
@@ -110,12 +110,12 @@ func (s *Service) ImageProcessor(imageInfo *model.ImageInfo) error {
 	return nil
 }
 
-func (s *Service) ImageProcessorKafkaWrite(imageInfo *model.ImageInfo) error {
+func (s *Service) ImageProcessorKafkaWrite(imageRequest *model.ImageRequest) error {
 	imageStatus := model.ImageStatus{
-		TaskId:   imageInfo.TaskId,
-		Position: imageInfo.Position,
-		StatusId: imageInfo.StatusId,
-		EndDT:    imageInfo.EndDT,
+		TaskId:   imageRequest.TaskId,
+		Position: imageRequest.Position,
+		StatusId: imageRequest.StatusId,
+		EndDT:    imageRequest.EndDT,
 	}
 
 	err := s.kafkaProducer.Write(imageStatus)

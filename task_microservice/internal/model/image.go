@@ -12,6 +12,14 @@ type ImageInfo struct {
 	EndDT    time.Time `json:"end_dt"`
 }
 
+type ImageRequest struct {
+	ImageInfo
+	Width        *int     `json:"width"`
+	Height       *int     `json:"height"`
+	TargetFormat *string  `json:"target_format"`
+	Quality      *float64 `json:"quality"`
+}
+
 type ImageStatus struct {
 	TaskId   int64
 	Position int

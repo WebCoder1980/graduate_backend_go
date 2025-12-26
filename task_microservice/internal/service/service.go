@@ -79,18 +79,19 @@ func (s *Service) GetImagesByTaskId(taskId int64) (model.TaskResponse, error) {
 	}
 
 	return model.TaskResponse{
+		TaskInfo:       taskInfo,
 		CommonStatusId: commonStatusId,
 		Images:         images,
 		CreatedDT:      taskInfo.CreatedDT,
 	}, nil
 }
 
-func (s *Service) Post(files *multipart.Form) (int64, error) {
+func (s *Service) Post(files *multipart.Form, width *int, height *int, targetFormat *string, quality *float64) (int64, error) {
 	if files == nil {
 		return -1, errors.New("файл отсутствует")
 	}
 
-	taskId, err := s.postgresql.TaskCreate()
+	taskId, err := s.postgresql.TaskCreate(width, height, targetFormat, quality)
 	if err != nil {
 		return -1, nil
 	}
@@ -126,7 +127,15 @@ func (s *Service) Post(files *multipart.Form) (int64, error) {
 
 		s.minioClient.Upsert(fileBytes, minioFilename)
 
-		err = s.kafkaProducer.Write(&imageInfo)
+		imageRequest := model.ImageRequest{
+			ImageInfo:    imageInfo,
+			Width:        width,
+			Height:       height,
+			TargetFormat: targetFormat,
+			Quality:      quality,
+		}
+
+		err = s.kafkaProducer.Write(&imageRequest)
 		if err != nil {
 			return -1, err
 		}

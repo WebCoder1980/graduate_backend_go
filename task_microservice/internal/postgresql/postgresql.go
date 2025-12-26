@@ -53,7 +53,11 @@ func (p *PostgreSQL) init() error {
 	_, err := p.db.Exec(`
 		CREATE TABLE IF NOT EXISTS task(
 			id BIGSERIAL PRIMARY KEY,
-			created_dt TIMESTAMP NOT NULL
+			created_dt TIMESTAMP NOT NULL,
+			width INT NULL,
+			height INT NULL,
+			format TEXT NULL,
+			quality REAL NULL
 		);
 		CREATE TABLE IF NOT EXISTS image_status(
 		    id BIGINT PRIMARY KEY,
@@ -91,9 +95,9 @@ func (p *PostgreSQL) init() error {
 }
 
 func (p *PostgreSQL) TaskGetById(id int64) (model.TaskInfo, error) {
-	row := p.db.QueryRow("SELECT id, created_dt FROM task WHERE id = $1", id)
+	row := p.db.QueryRow("SELECT id, created_dt, width, height, format, quality FROM task WHERE id = $1", id)
 	var taskInfo model.TaskInfo
-	err := row.Scan(&taskInfo.Id, &taskInfo.CreatedDT)
+	err := row.Scan(&taskInfo.Id, &taskInfo.CreatedDT, &taskInfo.Width, &taskInfo.Height, &taskInfo.Format, &taskInfo.Quality)
 	if err != nil {
 		return model.TaskInfo{}, err
 	}
@@ -116,10 +120,15 @@ func (p *PostgreSQL) ImageGetByTaskId(taskId int64) ([]model.ImageInfo, error) {
 
 	for rows.Next() {
 		var cur model.ImageInfo
+		var endDT sql.NullTime
 
-		err = rows.Scan(&cur.Id, &cur.Filename, &cur.Format, &cur.TaskId, &cur.Position, &cur.StatusId, &cur.EndDT)
+		err = rows.Scan(&cur.Id, &cur.Filename, &cur.Format, &cur.TaskId, &cur.Position, &cur.StatusId, &endDT)
 		if err != nil {
 			return nil, err
+		}
+
+		if endDT.Valid {
+			cur.EndDT = endDT.Time
 		}
 
 		result = append(result, cur)
@@ -128,8 +137,19 @@ func (p *PostgreSQL) ImageGetByTaskId(taskId int64) ([]model.ImageInfo, error) {
 	return result, nil
 }
 
-func (p *PostgreSQL) TaskCreate() (int64, error) {
-	row := p.db.QueryRow("INSERT INTO task (created_dt) VALUES ($1) RETURNING id", time.Now())
+func (p *PostgreSQL) TaskCreate(width *int, height *int, format *string, quality *float64) (int64, error) {
+	row := p.db.QueryRow(`
+		INSERT INTO task
+		(created_dt, width, height, format, quality)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id
+	`,
+		time.Now(),
+		width,
+		height,
+		format,
+		quality,
+	)
 	var resultId int64
 	err := row.Scan(&resultId)
 	if err != nil {

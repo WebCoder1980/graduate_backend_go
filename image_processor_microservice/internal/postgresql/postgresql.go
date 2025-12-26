@@ -102,8 +102,8 @@ func (p *PostgreSQL) ImageGetByid(imageId int64) (model.ImageInfo, error) {
 	return result, nil
 }
 
-func (p *PostgreSQL) ImageCreate(imageInfo model.ImageInfo) (int64, error) {
-	row := p.db.QueryRow("INSERT INTO image (task_id, position, name, format, status_id, end_dt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", imageInfo.TaskId, imageInfo.Position, imageInfo.Filename, imageInfo.Format, imageInfo.StatusId, imageInfo.EndDT)
+func (p *PostgreSQL) ImageCreate(imageRequest model.ImageRequest) (int64, error) {
+	row := p.db.QueryRow("INSERT INTO image (task_id, position, name, format, status_id, end_dt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", imageRequest.TaskId, imageRequest.Position, imageRequest.Filename, imageRequest.Format, imageRequest.StatusId, imageRequest.EndDT)
 	var resultId int64
 	err := row.Scan(&resultId)
 	if err != nil {

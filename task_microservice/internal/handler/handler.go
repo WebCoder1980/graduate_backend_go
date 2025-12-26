@@ -43,7 +43,43 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 
 	files := r.MultipartForm
 
-	taskId, err := h.service.Post(files)
+	var width, height *int
+	var format *string
+	var quality *float64
+
+	query := r.URL.Query()
+
+	if query.Has("width") {
+		w, err := strconv.Atoi(query.Get("width"))
+		width = &w
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+
+	if query.Has("height") {
+		h, err := strconv.Atoi(query.Get("height"))
+		height = &h
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+
+	if query.Has("format") {
+		f := query.Get("format")
+		format = &f
+	}
+
+	if query.Has("quality") {
+		q, err := strconv.ParseFloat(query.Get("quality"), 32)
+		quality = &q
+
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+
+	taskId, err := h.service.Post(files, width, height, format, quality)
 	if err != nil {
 		log.Panic(err)
 	}
