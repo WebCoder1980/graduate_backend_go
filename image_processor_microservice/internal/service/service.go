@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"graduate_backend_image_processor_microservice/internal/constant"
 	"graduate_backend_image_processor_microservice/internal/kafkaproducer"
 	"graduate_backend_image_processor_microservice/internal/minio"
@@ -46,31 +47,50 @@ func (s *Service) ImageProcessor(imageInfo *model.ImageInfo) error {
 
 	source, err := s.minioClient.Get(minioFilename)
 	if err != nil {
-		return err
+		err2 := s.ImageProcessorKafkaWrite(imageInfo, constant.StatusFailed)
+		if err2 != nil {
+			return errors.New(err.Error() + "; " + err2.Error())
+		}
+		return nil
 	}
 
 	// TODO processing
 
-	imageInfo.StatusId = constant.StatusSuccessful
-
 	imageId, err := s.postgresql.ImageCreate(*imageInfo)
 	if err != nil {
-		return err
+		err2 := s.ImageProcessorKafkaWrite(imageInfo, constant.StatusFailed)
+		if err2 != nil {
+			return errors.New(err.Error() + "; " + err2.Error())
+		}
+		return nil
 	}
 	imageInfo.Id = imageId
 
 	err = s.minioClient.Upsert(source, minioFilename)
 	if err != nil {
+		err2 := s.ImageProcessorKafkaWrite(imageInfo, constant.StatusFailed)
+		if err2 != nil {
+			return errors.New(err.Error() + "; " + err2.Error())
+		}
+		return nil
+	}
+
+	err = s.ImageProcessorKafkaWrite(imageInfo, constant.StatusSuccessful)
+	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (s *Service) ImageProcessorKafkaWrite(imageInfo *model.ImageInfo, imageStatusId int64) error {
 	imageStatus := model.ImageStatus{
 		TaskId:   imageInfo.TaskId,
 		Position: imageInfo.Position,
-		StatusId: imageInfo.StatusId,
+		StatusId: imageStatusId,
 	}
 
-	err = s.kafkaProducer.Write(imageStatus)
+	err := s.kafkaProducer.Write(imageStatus)
 	if err != nil {
 		return err
 	}
