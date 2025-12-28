@@ -154,7 +154,19 @@ func (s *Service) ImageProcess(input []byte, format string, width *int, height *
 		return nil, err
 	}
 
-	if width != nil && height != nil {
+	curWidth, curHeight := img.Bounds().Dx(), img.Bounds().Dy()
+
+	if width != nil || height != nil {
+		if height == nil {
+			k := float64(*width) / float64(curWidth)
+			h := int(float64(curHeight) * k)
+			height = &h
+		} else if width == nil {
+			k := float64(*height) / float64(curHeight)
+			w := int(float64(curWidth) * k)
+			width = &w
+		}
+
 		img = imaging.Resize(img, *width, *height, imaging.Lanczos)
 	}
 
