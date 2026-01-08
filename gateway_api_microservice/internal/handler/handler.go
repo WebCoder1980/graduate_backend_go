@@ -22,6 +22,8 @@ func (h *Handler) handler(w http.ResponseWriter, r *http.Request) {
 		h.getProxy(os.Getenv("task_microservice_address")).ServeHTTP(w, r)
 	} else if strings.HasPrefix(r.URL.Path, prefix+"/image-processor") {
 		h.getProxy(os.Getenv("image_processor_microservice_address")).ServeHTTP(w, r)
+	} else if strings.HasPrefix(r.URL.Path, prefix+"/user") {
+		h.getProxy(os.Getenv("user_microservice_address")).ServeHTTP(w, r)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
