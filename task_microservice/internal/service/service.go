@@ -8,6 +8,7 @@ import (
 	"graduate_backend_task_microservice/internal/minio"
 	"graduate_backend_task_microservice/internal/model"
 	"graduate_backend_task_microservice/internal/postgresql"
+	"graduate_backend_task_microservice/internal/security"
 	"io"
 	"mime/multipart"
 	"strconv"
@@ -19,6 +20,7 @@ type Service struct {
 	kafkaProducer *kafkaproducer.Producer
 	minioClient   *minio.Client
 	postgresql    *postgresql.PostgreSQL
+	security      *security.Security
 }
 
 func NewService(ctx context.Context) (*Service, error) {
@@ -37,11 +39,14 @@ func NewService(ctx context.Context) (*Service, error) {
 		return nil, err
 	}
 
+	secutityObj := security.NewSecurity()
+
 	return &Service{
 		ctx:           ctx,
 		kafkaProducer: kafka,
 		minioClient:   minioClient,
 		postgresql:    psql,
+		security:      secutityObj,
 	}, nil
 }
 
@@ -86,14 +91,19 @@ func (s *Service) GetImagesByTaskId(taskId int64) (model.TaskResponse, error) {
 	}, nil
 }
 
-func (s *Service) Post(files *multipart.Form, width *int, height *int, targetFormat *string, quality *float64) (int64, error) {
+func (s *Service) Post(files *multipart.Form, width *int, height *int, targetFormat *string, quality *float64, tokenString *string) (int64, error) {
 	if files == nil {
 		return -1, errors.New("файл отсутствует")
 	}
 
-	taskId, err := s.postgresql.TaskCreate(width, height, targetFormat, quality)
+	userUuid, err := s.security.GetSubFromToken(tokenString)
 	if err != nil {
-		return -1, nil
+		return -1, err
+	}
+
+	taskId, err := s.postgresql.TaskCreate(width, height, targetFormat, quality, userUuid)
+	if err != nil {
+		return -1, err
 	}
 
 	for i, v2 := range files.File["file"] {
@@ -133,6 +143,7 @@ func (s *Service) Post(files *multipart.Form, width *int, height *int, targetFor
 			Height:       height,
 			TargetFormat: targetFormat,
 			Quality:      quality,
+			UserUuid:     userUuid,
 		}
 
 		err = s.kafkaProducer.Write(&imageRequest)

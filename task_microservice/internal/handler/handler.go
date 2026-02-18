@@ -3,12 +3,14 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"graduate_backend_task_microservice/internal/constant"
 	"graduate_backend_task_microservice/internal/service"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 const prefix = "/api/v1/task"
@@ -36,6 +38,13 @@ func (h *Handler) TaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	if !query.Has("format") {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	err := r.ParseMultipartForm(constant.FileMaxSize)
 	if err != nil {
 		log.Panic(err)
@@ -46,8 +55,6 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 	var width, height *int
 	var format *string
 	var quality *float64
-
-	query := r.URL.Query()
 
 	if query.Has("width") {
 		w, err := strconv.Atoi(query.Get("width"))
@@ -79,7 +86,12 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	taskId, err := h.service.Post(files, width, height, format, quality)
+	token, err := h.getToken(r)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	taskId, err := h.service.Post(files, width, height, format, quality, &token)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -132,4 +144,19 @@ func (h *Handler) Start() {
 	http.HandleFunc(prefix+"/{id}", h.TaskIdHandler)
 
 	log.Panic(http.ListenAndServe(":"+os.Getenv("handler_port"), nil))
+}
+
+func (h *Handler) getToken(r *http.Request) (string, error) {
+	val := r.Header.Values("authorization")
+
+	if len(val) == 0 {
+		return "", errors.New("The 'authorization' header is missing")
+	}
+
+	res, found := strings.CutPrefix(val[0], "Bearer ")
+	if !found {
+		return "", errors.New("The 'authorization' header don't have prefix 'Bearer '")
+	}
+
+	return res, nil
 }

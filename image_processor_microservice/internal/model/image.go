@@ -10,6 +10,7 @@ type ImageInfo struct {
 	Position int       `json:"position"`
 	StatusId int64     `json:"status_id"`
 	EndDT    time.Time `json:"end_dt"`
+	UserUuid string    `json:"user_uuid"`
 }
 
 type ImageRequest struct {
@@ -18,6 +19,7 @@ type ImageRequest struct {
 	Height       *int     `json:"height"`
 	TargetFormat *string  `json:"target_format"`
 	Quality      *float32 `json:"quality"`
+	UserUuid     string   `json:"user_uuid"`
 }
 
 type ImageStatus struct {

@@ -9,6 +9,7 @@ type TaskInfo struct {
 	Height    *string   `json:"height"`
 	Format    *string   `json:"format"`
 	Quality   *float32  `json:"quality"`
+	UserUuid  string    `json:"user_uuid"`
 }
 
 type TaskResponse struct {

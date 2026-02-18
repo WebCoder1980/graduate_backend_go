@@ -19,6 +19,7 @@ type ImageRequest struct {
 	Height       *int     `json:"height"`
 	TargetFormat *string  `json:"target_format"`
 	Quality      *float64 `json:"quality"`
+	UserUuid     string   `json:"user_uuid"`
 }
 
 type ImageStatus struct {

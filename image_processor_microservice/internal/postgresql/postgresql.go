@@ -3,11 +3,12 @@ package postgresql
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"graduate_backend_image_processor_microservice/internal/model"
 	"log"
 	"os"
 	"strconv"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type PostgreSQL struct {
@@ -62,6 +63,7 @@ func (p *PostgreSQL) init() error {
 		    format TEXT NOT NULL,
 		    status_id BIGINT REFERENCES image_status(id) NOT NULL,
 		    end_dt TIMESTAMP NULL,
+		    user_uuid TEXT NOT NULL,
 		    CONSTRAINT uq_image_task_id_position UNIQUE (task_id, position)
 		)
 	`)
@@ -87,14 +89,14 @@ func (p *PostgreSQL) init() error {
 
 func (p *PostgreSQL) ImageGetByid(imageId int64) (model.ImageInfo, error) {
 	row := p.db.QueryRow(`	
-		SELECT id, name, format, task_id, position, status_id, end_dt
+		SELECT id, name, format, task_id, position, status_id, end_dt, user_uuid
 		FROM image
 		WHERE id = $1
 	`, imageId)
 
 	var result model.ImageInfo
 
-	err := row.Scan(&result.Id, &result.Filename, &result.Format, &result.TaskId, &result.Position, &result.StatusId, &result.EndDT)
+	err := row.Scan(&result.Id, &result.Filename, &result.Format, &result.TaskId, &result.Position, &result.StatusId, &result.EndDT, &result.UserUuid)
 	if err != nil {
 		return model.ImageInfo{}, err
 	}
@@ -103,7 +105,7 @@ func (p *PostgreSQL) ImageGetByid(imageId int64) (model.ImageInfo, error) {
 }
 
 func (p *PostgreSQL) ImageCreate(imageRequest model.ImageRequest) (int64, error) {
-	row := p.db.QueryRow("INSERT INTO image (task_id, position, name, format, status_id, end_dt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", imageRequest.TaskId, imageRequest.Position, imageRequest.Filename, imageRequest.Format, imageRequest.StatusId, imageRequest.EndDT)
+	row := p.db.QueryRow("INSERT INTO image (task_id, position, name, format, status_id, end_dt, user_uuid) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id", imageRequest.TaskId, imageRequest.Position, imageRequest.Filename, imageRequest.Format, imageRequest.StatusId, imageRequest.EndDT, imageRequest.UserUuid)
 	var resultId int64
 	err := row.Scan(&resultId)
 	if err != nil {
