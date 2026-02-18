@@ -1,4 +1,4 @@
-# Высокопроизводительное приложение для пакетной обработки изображений
+# Высокопроизводительное приложение на микросервисной архитектуре для пакетной обработки изображений
 
 ![Go](https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white&style=for-the-badge)
 ![MinIO](https://img.shields.io/badge/MinIO-FF6F00?logo=minio&logoColor=white&style=for-the-badge)
