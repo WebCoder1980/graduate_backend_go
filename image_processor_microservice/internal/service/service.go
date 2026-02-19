@@ -5,20 +5,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/disintegration/imaging"
-	_ "github.com/kolesa-team/go-webp/decoder"
-	"github.com/kolesa-team/go-webp/encoder"
-	"github.com/kolesa-team/go-webp/webp"
 	"graduate_backend_image_processor_microservice/internal/constant"
 	"graduate_backend_image_processor_microservice/internal/kafkaproducer"
 	"graduate_backend_image_processor_microservice/internal/minio"
 	"graduate_backend_image_processor_microservice/internal/model"
 	"graduate_backend_image_processor_microservice/internal/postgresql"
+	"graduate_backend_image_processor_microservice/internal/security"
 	"image/jpeg"
 	"image/png"
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/disintegration/imaging"
+	_ "github.com/kolesa-team/go-webp/decoder"
+	"github.com/kolesa-team/go-webp/encoder"
+	"github.com/kolesa-team/go-webp/webp"
 )
 
 const (
@@ -32,6 +34,7 @@ type Service struct {
 	postgresql    *postgresql.PostgreSQL
 	minioClient   *minio.Client
 	kafkaProducer *kafkaproducer.Producer
+	security      *security.Security
 }
 
 func NewService(ctx context.Context) (*Service, error) {
@@ -50,18 +53,30 @@ func NewService(ctx context.Context) (*Service, error) {
 		return nil, err
 	}
 
+	sec := security.NewSecurity()
+
 	return &Service{
 		ctx:           ctx,
 		postgresql:    psql,
 		minioClient:   minioClient,
 		kafkaProducer: kafka,
+		security:      sec,
 	}, nil
 }
 
-func (s *Service) ImageGetById(imageId int64) ([]byte, error) {
+func (s *Service) ImageGetById(imageId int64, token *string) ([]byte, error) {
 	imageInfo, err := s.postgresql.ImageGetByid(imageId)
 	if err != nil {
 		return nil, err
+	}
+
+	tokenSub, err := s.security.GetSubFromToken(token)
+	if err != nil {
+		return nil, err
+	}
+	
+	if tokenSub != imageInfo.UserUuid {
+		return nil, errors.New("access denied for non owner")
 	}
 
 	minioFilename := fmt.Sprintf("%d_%d.%s", imageInfo.TaskId, imageInfo.Position, imageInfo.Format)
