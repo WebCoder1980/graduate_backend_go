@@ -40,15 +40,11 @@ func (h *Handler) TaskHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 	token, err := h.getToken(r)
 	if err != nil {
-		log.Panic(err)
-	}
-
-	query := r.URL.Query()
-
-	if !query.Has("format") {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+
+	query := r.URL.Query()
 
 	err = r.ParseMultipartForm(constant.FileMaxSize)
 	if err != nil {
@@ -114,13 +110,19 @@ func (h *Handler) TaskIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) TaskGetById(w http.ResponseWriter, r *http.Request) {
+	token, err := h.getToken(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	taskId, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Panic(err)
 	}
 
-	result, err := h.service.GetImagesByTaskId(taskId)
+	result, err := h.service.GetImagesByTaskId(taskId, &token)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Panic(err)
