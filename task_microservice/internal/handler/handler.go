@@ -38,6 +38,11 @@ func (h *Handler) TaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
+	token, err := h.getToken(r)
+	if err != nil {
+		log.Panic(err)
+	}
+
 	query := r.URL.Query()
 
 	if !query.Has("format") {
@@ -45,7 +50,7 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := r.ParseMultipartForm(constant.FileMaxSize)
+	err = r.ParseMultipartForm(constant.FileMaxSize)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -84,11 +89,6 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Panic(err)
 		}
-	}
-
-	token, err := h.getToken(r)
-	if err != nil {
-		log.Panic(err)
 	}
 
 	taskId, err := h.service.Post(files, width, height, format, quality, &token)
