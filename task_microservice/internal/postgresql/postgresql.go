@@ -131,7 +131,7 @@ func (p *PostgreSQL) ImageGetByTaskId(taskId int64) ([]model.ImageInfo, error) {
 		}
 
 		if endDT.Valid {
-			cur.EndDT = endDT.Time
+			cur.EndDT = &endDT.Time
 		}
 
 		result = append(result, cur)
