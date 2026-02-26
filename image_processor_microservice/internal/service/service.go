@@ -74,7 +74,7 @@ func (s *Service) ImageGetById(imageId int64, token *string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if tokenSub != imageInfo.UserUuid {
 		return nil, errors.New("access denied for non owner")
 	}
@@ -103,7 +103,8 @@ func (s *Service) ServiceImageProcessor(imageRequest *model.ImageRequest) error 
 	sourceBytes, err := s.minioClient.Get(minio.BucketSourceName, minioFilenameSource)
 	if err != nil {
 		imageRequest.StatusId = constant.StatusFailed
-		imageRequest.EndDT = time.Now()
+		c := time.Now()
+		imageRequest.EndDT = &c
 		err2 := s.ImageProcessorKafkaWrite(imageRequest)
 		if err2 != nil {
 			return errors.New(err.Error() + "; " + err2.Error())
@@ -115,7 +116,9 @@ func (s *Service) ServiceImageProcessor(imageRequest *model.ImageRequest) error 
 	if err != nil {
 		return err
 	}
-	imageRequest.EndDT = time.Now()
+
+	curDT := time.Now()
+	imageRequest.EndDT = &curDT
 
 	imageId, err := s.postgresql.ImageCreate(*imageRequest)
 	if err != nil {
