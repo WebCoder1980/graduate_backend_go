@@ -1,16 +1,19 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/useAuth'
 import './Header.css'
 
 export default function Header() {
+  const { isAuthenticated, logout } = useAuth()
+
   return (
     <header className="header">
       <nav className="header-nav">
-        <Link to="/">Главная</Link>
-        <Link to="/login">Вход</Link>
-        <Link to="/register">Регистрация</Link>
-        <Link to="/upload">Загрузить</Link>
-        <Link to="/gallery">Галерея</Link>
-        <Link to="/admin">Админ</Link>
+        {!isAuthenticated && <Link to="/login">Вход</Link>}
+        {!isAuthenticated && <Link to="/register">Регистрация</Link>}
+        {isAuthenticated && <Link to="/upload">Загрузить</Link>}
+        {isAuthenticated && <Link to="/gallery">Галерея</Link>}
+        {isAuthenticated && <Link to="/admin">Админ</Link>}
+        {isAuthenticated && <button onClick={logout}>Выход</button>}
       </nav>
     </header>
   )

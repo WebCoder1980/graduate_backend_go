@@ -1,7 +1,14 @@
 import Header from '../components/Header'
+import { useAuth } from '../context/useAuth'
+import {Navigate} from "react-router-dom";
 
 export default function Admin() {
-  return (
+    const { isAuthenticated } = useAuth()
+    if (!isAuthenticated) {
+        return <Navigate to="/" replace />
+    }
+
+    return (
     <>
       <Header />
       <main>

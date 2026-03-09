@@ -1,12 +1,11 @@
-import Header from '../components/Header'
+import {Navigate} from "react-router-dom";
+import {useAuth} from "../context/useAuth.ts";
 
 export default function Home() {
-  return (
-    <>
-      <Header />
-      <main>
-        <h1>Главная</h1>
-      </main>
-    </>
-  )
+  const { isAuthenticated } = useAuth()
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  return <Navigate to="/upload" replace />
 }
