@@ -30,10 +30,38 @@ func NewHandler(ctx context.Context) (*Handler, error) {
 
 func (h *Handler) TaskHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
+	case http.MethodGet:
+		h.TaskGet(w, r)
 	case http.MethodPost:
 		h.TaskPost(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *Handler) TaskGet(w http.ResponseWriter, r *http.Request) {
+	token, err := h.getToken(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	result, err := h.service.TaskGetByUserUuid(&token)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Panic(err)
+	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Panic(err)
+	}
+
+	_, err = w.Write(data)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Panic(err)
 	}
 }
 

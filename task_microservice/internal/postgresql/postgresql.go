@@ -97,6 +97,27 @@ func (p *PostgreSQL) init() error {
 	return nil
 }
 
+func (p *PostgreSQL) TaskGetByUserUuid(userUuid string) ([]model.TaskInfo, error) {
+	rows, err := p.db.Query("SELECT id, created_dt, width, height, format, quality, user_uuid FROM task WHERE user_uuid = $1", userUuid)
+	if err != nil {
+		return []model.TaskInfo{}, err
+	}
+
+	var tasksInfo []model.TaskInfo
+
+	for rows.Next() {
+		var taskInfo model.TaskInfo
+		err = rows.Scan(&taskInfo.Id, &taskInfo.CreatedDT, &taskInfo.Width, &taskInfo.Height, &taskInfo.Format, &taskInfo.Quality, &taskInfo.UserUuid)
+		if err != nil {
+			return []model.TaskInfo{}, err
+		}
+
+		tasksInfo = append(tasksInfo, taskInfo)
+	}
+
+	return tasksInfo, nil
+}
+
 func (p *PostgreSQL) TaskGetById(id int64) (model.TaskInfo, error) {
 	row := p.db.QueryRow("SELECT id, created_dt, width, height, format, quality, user_uuid FROM task WHERE id = $1", id)
 	var taskInfo model.TaskInfo

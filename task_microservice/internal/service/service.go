@@ -50,6 +50,20 @@ func NewService(ctx context.Context) (*Service, error) {
 	}, nil
 }
 
+func (s *Service) TaskGetByUserUuid(token *string) ([]model.TaskInfo, error) {
+	tokenSub, err := s.security.GetSubFromToken(token)
+	if err != nil {
+		return []model.TaskInfo{}, err
+	}
+
+	images, err := s.postgresql.TaskGetByUserUuid(tokenSub)
+	if err != nil {
+		return []model.TaskInfo{}, err
+	}
+
+	return images, nil
+}
+
 func (s *Service) GetImagesByTaskId(taskId int64, token *string) (model.TaskResponse, error) {
 	taskInfo, err := s.postgresql.TaskGetById(taskId)
 	if err != nil {
@@ -60,7 +74,7 @@ func (s *Service) GetImagesByTaskId(taskId int64, token *string) (model.TaskResp
 	if err != nil {
 		return model.TaskResponse{}, err
 	}
-	
+
 	if tokenSub != taskInfo.UserUuid {
 		return model.TaskResponse{}, errors.New("access denied for non owner")
 	}
