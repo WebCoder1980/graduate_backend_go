@@ -152,7 +152,26 @@ export default function Gallery() {
                     </>
                   )
                 }
-              })()}
+              })(                )}
+                {selectedTask.images && selectedTask.images.length > 0 && (
+                  <button
+                    onClick={() => {
+                      selectedTask.images?.forEach(img => {
+                        if (imageUrls[img.id]) {
+                          const a = document.createElement('a')
+                          a.href = imageUrls[img.id]
+                          a.download = `${img.name}.${img.format}`
+                          document.body.appendChild(a)
+                          a.click()
+                          document.body.removeChild(a)
+                        }
+                      })
+                    }}
+                    style={{ marginBottom: '15px', padding: '8px 16px', cursor: 'pointer', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px' }}
+                  >
+                    Скачать все изображения
+                  </button>
+                )}
                 <div>
                   <h3>Изображения</h3>
                   {selectedTask.images?.map(img => (
