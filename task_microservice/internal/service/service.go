@@ -15,9 +15,13 @@ import (
 	"strings"
 )
 
+type KafkaProducer interface {
+	Write(imageInfo *model.ImageRequest) error
+}
+
 type Service struct {
 	ctx           context.Context
-	kafkaProducer *kafkaproducer.Producer
+	kafkaProducer KafkaProducer
 	minioClient   *minio.Client
 	postgresql    *postgresql.PostgreSQL
 	security      *security.Security
@@ -44,6 +48,28 @@ func NewService(ctx context.Context) (*Service, error) {
 	return &Service{
 		ctx:           ctx,
 		kafkaProducer: kafka,
+		minioClient:   minioClient,
+		postgresql:    psql,
+		security:      secutityObj,
+	}, nil
+}
+
+func NewServiceWithProducer(ctx context.Context, producer KafkaProducer) (*Service, error) {
+	psql, err := postgresql.NewPostgreSQL()
+	if err != nil {
+		return nil, err
+	}
+
+	minioClient, err := minio.NewClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	secutityObj := security.NewSecurity()
+
+	return &Service{
+		ctx:           ctx,
+		kafkaProducer: producer,
 		minioClient:   minioClient,
 		postgresql:    psql,
 		security:      secutityObj,

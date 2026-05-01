@@ -28,6 +28,10 @@ func NewHandler(ctx context.Context) (*Handler, error) {
 	return &Handler{service: serv}, nil
 }
 
+func NewHandlerWithService(serv *service.Service) *Handler {
+	return &Handler{service: serv}
+}
+
 func (h *Handler) TaskHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -52,6 +56,10 @@ func (h *Handler) TaskGet(w http.ResponseWriter, r *http.Request) {
 	result, err := h.service.TaskGetByUserUuid(&token)
 	if err != nil {
 		log.Printf("TaskGet error: %v", err)
+		if strings.Contains(err.Error(), "token") {
+			writeError(w, http.StatusUnauthorized, "Invalid or missing token")
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "Failed to get tasks")
 		return
 	}
@@ -80,8 +88,6 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := r.URL.Query()
-
 	err = r.ParseMultipartForm(constant.FileMaxSize)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Failed to parse form data")
@@ -96,6 +102,8 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 	var width, height *int
 	var format *string
 	var quality *float64
+
+	query := r.URL.Query()
 
 	if query.Has("width") {
 		wVal, err := strconv.Atoi(query.Get("width"))
