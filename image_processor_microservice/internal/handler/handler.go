@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"graduate_backend_image_processor_microservice/internal/service"
 	"log"
@@ -29,33 +30,41 @@ func NewHandler(ctx context.Context) (*Handler, error) {
 func (h *Handler) ImageIdGet(w http.ResponseWriter, r *http.Request) {
 	token, err := h.getToken(r)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		writeError(w, http.StatusUnauthorized, "Invalid or missing token")
 		return
 	}
 
 	imageId, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-	if err != nil {
-		log.Panic(err)
+	if err != nil || imageId <= 0 {
+		writeError(w, http.StatusBadRequest, "Invalid image ID")
+		return
 	}
 
 	data, err := h.service.ImageGetById(imageId, &token)
 	if err != nil {
-		log.Panic(err)
+		log.Printf("ImageIdGet error: %v", err)
+		writeError(w, http.StatusInternalServerError, "Failed to get image")
+		return
 	}
 
-	_, err = w.Write(data)
-	if err != nil {
-		log.Panic(err)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	if _, err = w.Write(data); err != nil {
+		log.Printf("Failed to write response: %v", err)
 	}
 }
 
 func (h *Handler) ImageIdHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		h.ImageIdGet(w, r)
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
 	}
+	h.ImageIdGet(w, r)
+}
+
+func writeError(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
 
 func (h *Handler) Start() {
