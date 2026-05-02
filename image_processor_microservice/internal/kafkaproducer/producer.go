@@ -12,6 +12,10 @@ const (
 	TopicImage = "image_upsert"
 )
 
+type KafkaProducer interface {
+	Write(imageStatus model.ImageStatus) error
+}
+
 type Producer struct {
 	ctx         context.Context
 	kafkaWriter *kafka.Writer

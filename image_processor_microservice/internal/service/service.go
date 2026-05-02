@@ -29,11 +29,15 @@ const (
 	FormatWEBP string = "webp"
 )
 
+type KafkaProducer interface {
+	Write(imageStatus model.ImageStatus) error
+}
+
 type Service struct {
 	ctx           context.Context
 	postgresql    *postgresql.PostgreSQL
 	minioClient   *minio.Client
-	kafkaProducer *kafkaproducer.Producer
+	kafkaProducer KafkaProducer
 	security      *security.Security
 }
 
@@ -60,6 +64,28 @@ func NewService(ctx context.Context) (*Service, error) {
 		postgresql:    psql,
 		minioClient:   minioClient,
 		kafkaProducer: kafka,
+		security:      sec,
+	}, nil
+}
+
+func NewServiceWithProducer(ctx context.Context, producer KafkaProducer) (*Service, error) {
+	psql, err := postgresql.NewPostgreSQL()
+	if err != nil {
+		return nil, err
+	}
+
+	minioClient, err := minio.NewClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	sec := security.NewSecurity()
+
+	return &Service{
+		ctx:           ctx,
+		postgresql:    psql,
+		minioClient:   minioClient,
+		kafkaProducer: producer,
 		security:      sec,
 	}, nil
 }

@@ -27,6 +27,10 @@ func NewHandler(ctx context.Context) (*Handler, error) {
 	return &Handler{service: serv}, nil
 }
 
+func NewHandlerWithService(serv *service.Service) *Handler {
+	return &Handler{service: serv}
+}
+
 func (h *Handler) ImageIdGet(w http.ResponseWriter, r *http.Request) {
 	token, err := h.getToken(r)
 	if err != nil {

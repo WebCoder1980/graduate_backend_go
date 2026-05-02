@@ -10,15 +10,41 @@ import (
 	"github.com/Nerzal/gocloak/v13"
 )
 
+type KeycloakClient interface {
+	Login(ctx context.Context, clientID, clientSecret, realm, username, password string) (*gocloak.JWT, error)
+	RefreshToken(ctx context.Context, refreshToken, clientID, clientSecret, realm string) (*gocloak.JWT, error)
+	CreateUser(ctx context.Context, token, realm string, user gocloak.User) (string, error)
+	SetPassword(ctx context.Context, token, userID, realm, password string, temporary bool) error
+	DeleteUser(ctx context.Context, token, realm, id string) error
+	GetRealmRole(ctx context.Context, token, realm, roleName string) (*gocloak.Role, error)
+	CreateRealmRole(ctx context.Context, token, realm string, role gocloak.Role) (string, error)
+	AddRealmRoleToUser(ctx context.Context, token, realm, userID string, roles []gocloak.Role) error
+	LoginAdmin(ctx context.Context, username, password, realm string) (*gocloak.JWT, error)
+}
+
 type Service struct {
 	ctx      context.Context
-	keycloak *gocloak.GoCloak
+	keycloak KeycloakClient
 }
 
 func NewService(ctx context.Context) (*Service, error) {
 	res := Service{
 		ctx:      ctx,
 		keycloak: gocloak.NewClient(os.Getenv("keycloak_address")),
+	}
+
+	err := res.init()
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+func NewServiceWithKeycloak(ctx context.Context, kc KeycloakClient) (*Service, error) {
+	res := Service{
+		ctx:      ctx,
+		keycloak: kc,
 	}
 
 	err := res.init()
