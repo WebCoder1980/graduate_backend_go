@@ -21,6 +21,7 @@ interface AuthContextType {
   register: (username: string, password: string) => Promise<void>
   logout: () => void
   isAuthenticated: boolean
+  checkTokenExpired: () => boolean
 }
 
 interface KeycloakPayload {
@@ -40,7 +41,19 @@ const API_URL = '/api/v1/user'
 
 function getStoredTokens(): AuthTokens | null {
   const stored = localStorage.getItem('auth_tokens')
-  return stored ? JSON.parse(stored) : null
+  if (!stored) return null
+  try {
+    const tokens: AuthTokens = JSON.parse(stored)
+    const payload = jwtDecode(tokens.access_token) as JwtPayload
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem('auth_tokens')
+      return null
+    }
+    return tokens
+  } catch {
+    localStorage.removeItem('auth_tokens')
+    return null
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -83,8 +96,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('auth_tokens')
   }
 
+  const checkTokenExpired = () => {
+    if (!tokens) return false
+    try {
+      const { exp } = jwtDecode(tokens.access_token) as JwtPayload
+      return exp ? exp * 1000 < Date.now() : false
+    } catch {
+      return true
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ tokens, login, register, logout, isAuthenticated: !!tokens }}>
+    <AuthContext.Provider value={{ tokens, login, register, logout, isAuthenticated: !!tokens, checkTokenExpired }}>
       {children}
     </AuthContext.Provider>
   )

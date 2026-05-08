@@ -1,9 +1,19 @@
+import { useEffect } from 'react'
 import {Navigate} from "react-router-dom";
 import {useAuth} from "../context/useAuth.ts";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth()
-  if (!isAuthenticated) {
+  const { isAuthenticated, checkTokenExpired, logout } = useAuth()
+
+  const tokenExpired = checkTokenExpired()
+
+  useEffect(() => {
+    if (tokenExpired) {
+      logout()
+    }
+  }, [tokenExpired, logout])
+
+  if (tokenExpired || !isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 

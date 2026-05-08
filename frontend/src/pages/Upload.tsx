@@ -1,12 +1,12 @@
 import Header from '../components/Header'
 import {useAuth} from "../context/useAuth.ts";
 import {Navigate} from "react-router-dom";
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const API_URL = '/api/v1/task'
 
 export default function Upload() {
-  const { isAuthenticated, tokens } = useAuth()
+  const { isAuthenticated, tokens, checkTokenExpired, logout } = useAuth()
     const [files, setFiles] = useState<File[]>([])
     const [width, setWidth] = useState('')
     const [height, setHeight] = useState('')
@@ -16,7 +16,15 @@ export default function Upload() {
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
 
-    if (!isAuthenticated) {
+    const tokenExpired = checkTokenExpired()
+
+    useEffect(() => {
+      if (tokenExpired) {
+        logout()
+      }
+    }, [tokenExpired, logout])
+
+    if (tokenExpired || !isAuthenticated) {
         return <Navigate to="/" replace />
     }
 

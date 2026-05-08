@@ -28,7 +28,7 @@ interface Image {
 const API_URL = '/api/v1'
 
 export default function Gallery() {
-  const { isAuthenticated, tokens } = useAuth()
+  const { isAuthenticated, tokens, checkTokenExpired, logout } = useAuth()
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(false)
@@ -105,7 +105,15 @@ export default function Gallery() {
     }
   }, [isAuthenticated, tokens, fetchTasks])
 
-  if (!isAuthenticated) {
+  const tokenExpired = checkTokenExpired()
+
+  useEffect(() => {
+    if (tokenExpired) {
+      logout()
+    }
+  }, [tokenExpired, logout])
+
+  if (tokenExpired || !isAuthenticated) {
     return <Navigate to="/" replace />
   }
 
