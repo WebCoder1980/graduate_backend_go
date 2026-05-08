@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {Navigate, useNavigate} from 'react-router-dom'
-import Header from '../components/Header'
 import { useAuth } from '../context/useAuth'
 
 export default function Register() {
@@ -31,7 +30,6 @@ export default function Register() {
 
   return (
     <>
-      <Header />
       <main>
         <h1>Регистрация</h1>
         <form onSubmit={handleSubmit}>

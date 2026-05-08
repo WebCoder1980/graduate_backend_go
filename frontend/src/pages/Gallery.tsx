@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Navigate } from 'react-router-dom'
-import Header from '../components/Header'
 import { useAuth } from "../context/useAuth.ts"
 
 interface Task {
@@ -119,8 +118,7 @@ export default function Gallery() {
 
   return (
     <>
-      <Header />
-      <main style={{ padding: '20px' }}>
+      <main>
         <h1>Галерея</h1>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {loading && <p>Загрузка...</p>}

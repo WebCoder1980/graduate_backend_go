@@ -1,4 +1,3 @@
-import Header from '../components/Header'
 import {useAuth} from "../context/useAuth.ts";
 import {Navigate} from "react-router-dom";
 import { useState, useEffect } from 'react'
@@ -79,7 +78,6 @@ export default function Upload() {
 
     return (
         <>
-            <Header />
             <main>
                 <h1>Загрузка фото</h1>
                 <form onSubmit={handleSubmit}>

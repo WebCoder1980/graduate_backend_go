@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {Navigate, useNavigate} from 'react-router-dom'
-import Header from '../components/Header'
 import { useAuth } from '../context/useAuth'
 
 export default function Login() {
@@ -32,7 +31,6 @@ export default function Login() {
 
   return (
     <>
-      <Header />
       <main>
         <h1>Вход</h1>
         <form onSubmit={handleSubmit}>
