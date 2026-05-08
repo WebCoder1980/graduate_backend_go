@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {Navigate, useNavigate} from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
+import './pages.css'
 
 export default function Register() {
   const [username, setUsername] = useState('')
@@ -29,37 +30,33 @@ export default function Register() {
   }
 
   return (
-    <>
-      <main>
+    <div className="page-container">
+      <div className="form-card">
         <h1>Регистрация</h1>
         <form onSubmit={handleSubmit}>
-          <div>
-            <label>
-              Имя пользователя:
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </label>
+          <div className="form-group">
+            <label>Имя пользователя</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
           </div>
-          <div>
-            <label>
-              Пароль:
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </label>
+          <div className="form-group">
+            <label>Пароль</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
           </div>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-          {success && <p style={{ color: 'green' }}>Регистрация успешна! Перенаправление на вход...</p>}
-          <button type="submit">Зарегистрироваться</button>
+          {error && <p className="error-msg">{error}</p>}
+          {success && <p className="success-msg">Регистрация успешна! Перенаправление на вход...</p>}
+          <button className="submit-btn" type="submit">Зарегистрироваться</button>
         </form>
-      </main>
-    </>
+      </div>
+    </div>
   )
 }

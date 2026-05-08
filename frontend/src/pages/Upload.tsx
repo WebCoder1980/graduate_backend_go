@@ -1,6 +1,7 @@
 import {useAuth} from "../context/useAuth.ts";
 import {Navigate} from "react-router-dom";
 import { useState, useEffect } from 'react'
+import './pages.css'
 
 const API_URL = '/api/v1/task'
 
@@ -77,48 +78,57 @@ export default function Upload() {
     }
 
     return (
-        <>
-            <main>
+        <div className="page-container">
+            <div className="form-card">
                 <h1>Загрузка фото</h1>
                 <form onSubmit={handleSubmit}>
-                    <div>
-                        <label>Files:</label>
-                        <input type="file" multiple accept=".jpg,.jpeg,.png,.webp" onChange={handleFileChange} />
-                        {files.map((f, i) => (
-                            <div key={i}>
-                                {f.name}
-                                <button type="button" onClick={() => removeFile(i)}>×</button>
-                            </div>
-                        ))}
+                    <div className="form-group">
+                        <label>Файлы</label>
+                        <div className="file-input-wrapper">
+                            <div className="file-input-btn">+ Выбрать файлы</div>
+                            <input type="file" multiple accept=".jpg,.jpeg,.png,.webp" onChange={handleFileChange} />
+                        </div>
+                        <div className="file-list">
+                            {files.map((f, i) => (
+                                <div className="file-item" key={i}>
+                                    <span>{f.name}</span>
+                                    <button type="button" onClick={() => removeFile(i)}>×</button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <div>
-                        <label>Width:</label>
-                        <input type="number" value={width} onChange={e => setWidth(e.target.value)} />
+                    <div className="row">
+                        <div className="form-group">
+                            <label>Ширина</label>
+                            <input type="number" value={width} onChange={e => setWidth(e.target.value)} />
+                        </div>
+                        <div className="form-group">
+                            <label>Высота</label>
+                            <input type="number" value={height} onChange={e => setHeight(e.target.value)} />
+                        </div>
                     </div>
-                    <div>
-                        <label>Height:</label>
-                        <input type="number" value={height} onChange={e => setHeight(e.target.value)} />
+                    <div className="row">
+                        <div className="form-group">
+                            <label>Качество (0-1)</label>
+                            <input type="number" step="0.1" min="0" max="1" value={quality} onChange={e => setQuality(e.target.value)} />
+                        </div>
+                        <div className="form-group">
+                            <label>Формат</label>
+                            <select value={format} onChange={e => setFormat(e.target.value)}>
+                                <option value="">Original</option>
+                                <option value="jpg">JPG</option>
+                                <option value="png">PNG</option>
+                                <option value="webp">WEBP</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label>Quality (0-1):</label>
-                        <input type="number" step="0.1" min="0" max="1" value={quality} onChange={e => setQuality(e.target.value)} />
-                    </div>
-                    <div>
-                        <label>Format:</label>
-                        <select value={format} onChange={e => setFormat(e.target.value)}>
-                            <option value="">Original</option>
-                            <option value="jpg">JPG</option>
-                            <option value="png">PNG</option>
-                            <option value="webp">WEBP</option>
-                        </select>
-                    </div>
-                    <button type="submit" disabled={uploading || files.length === 0}>
-                        {uploading ? 'Uploading...' : 'Upload'}
+                    <button className="submit-btn" type="submit" disabled={uploading || files.length === 0}>
+                        {uploading ? 'Загрузка...' : 'Загрузить'}
                     </button>
                 </form>
-                {error && <p style={{color: 'red'}}>{error}</p>}
-                {success && <p style={{color: 'green'}}>{success}</p>}
-            </main>
-        </>
+                {error && <p className="error-msg">{error}</p>}
+                {success && <p className="success-msg">{success}</p>}
+            </div>
+        </div>
     )
 }
