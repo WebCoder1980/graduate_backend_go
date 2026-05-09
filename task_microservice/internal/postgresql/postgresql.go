@@ -98,7 +98,7 @@ func (p *PostgreSQL) init() error {
 }
 
 func (p *PostgreSQL) TaskGetByUserUuid(userUuid string) ([]model.TaskInfo, error) {
-	rows, err := p.db.Query("SELECT id, created_dt, width, height, format, quality, user_uuid FROM task WHERE user_uuid = $1", userUuid)
+	rows, err := p.db.Query("SELECT id, created_dt, width, height, format, quality, user_uuid FROM task WHERE user_uuid = $1 ORDER BY id DESC", userUuid)
 	if err != nil {
 		return []model.TaskInfo{}, err
 	}
