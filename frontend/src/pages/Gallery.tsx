@@ -137,27 +137,14 @@ export default function Gallery() {
             <div style={{ flex: 2 }}>
               <h2>Детали задачи #{selectedTask.id}</h2>
               {(() => {
-                const allEmpty = selectedTask.width === null && 
-                                selectedTask.height === null && 
-                                selectedTask.format === null && 
-                                selectedTask.quality === null
-                if (allEmpty) {
-                  return (
-                    <>
-                      <p>Размеры: исходный x исходный</p>
-                      <p>Формат: исходный</p>
-                      <p>Качество: исходное</p>
-                    </>
-                  )
-                } else {
-                  return (
-                    <>
-                      <p>Размеры: {selectedTask.width ?? '?'} x {selectedTask.height ?? '?'}</p>
-                      <p>Формат: {selectedTask.format ?? 'не указан'}</p>
-                      <p>Качество: {selectedTask.quality ?? 'не указано'}</p>
-                    </>
-                  )
-                }
+                return (
+                  <>
+                    <p>Размеры: {selectedTask.width ?? 'исходное'} x {selectedTask.height ?? 'исходное'}</p>
+                    <p>Формат: {selectedTask.format ?? 'исходный'}</p>
+                    <p>Качество: {selectedTask.quality ?? 'исходное'}</p>
+                  </>
+                )
+
               })(                )}
                 {selectedTask.images && selectedTask.images.length > 0 && (
                   <button

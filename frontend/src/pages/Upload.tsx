@@ -109,13 +109,13 @@ export default function Upload() {
                     </div>
                     <div className="row">
                         <div className="form-group">
-                            <label>Качество (0-1)</label>
-                            <input type="number" step="0.1" min="0" max="1" value={quality} onChange={e => setQuality(e.target.value)} />
+                            <label>Качество %</label>
+                            <input type="number" step="1" min="0" max="100" value={quality} onChange={e => setQuality(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label>Формат</label>
                             <select value={format} onChange={e => setFormat(e.target.value)}>
-                                <option value="">Original</option>
+                                <option value="">Исходный</option>
                                 <option value="jpg">JPG</option>
                                 <option value="png">PNG</option>
                                 <option value="webp">WEBP</option>
