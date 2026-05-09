@@ -116,6 +116,14 @@ export default function Gallery() {
     return <Navigate to="/" replace />
   }
 
+  const formatDT = (src: string) => {
+    src = src.replaceAll("-", ".")
+    src = src.replaceAll("T", " ")
+    src = src.slice(0, 19)
+
+    return src
+  }
+
   return (
     <>
       <main>
@@ -128,7 +136,7 @@ export default function Gallery() {
             <ul>
               {tasks.map(task => (
                 <li key={task.id} onClick={() => fetchTaskDetails(task.id)} style={{ cursor: 'pointer', padding: '8px', borderBottom: '1px solid #ccc' }}>
-                  Задача #{task.id} - {new Date(task.created_dt).toLocaleString()}
+                  Задача #{task.id} - {formatDT(task.created_dt)}
                 </li>
               ))}
             </ul>
