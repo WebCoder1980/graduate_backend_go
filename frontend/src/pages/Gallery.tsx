@@ -137,8 +137,22 @@ export default function Gallery() {
             <div style={{ flex: 2 }}>
               <h2>Детали задачи #{selectedTask.id}</h2>
               {(() => {
+                let statusName = ""
+                switch (selectedTask.common_status_id) {
+                  case 1:
+                    statusName = "В процессе"
+                    break
+                  case 2:
+                    statusName = "Завершено"
+                    break
+                  case 3:
+                    statusName = "Ошибка"
+                    break
+                }
+
                 return (
                   <>
+                    <p>Статус задачи: {statusName}</p>
                     <p>Размеры: {selectedTask.width ?? 'исходное'} x {selectedTask.height ?? 'исходное'}</p>
                     <p>Формат: {selectedTask.format ?? 'исходный'}</p>
                     <p>Качество: {selectedTask.quality ?? 'исходное'}</p>
@@ -169,7 +183,7 @@ export default function Gallery() {
                   <h3>Изображения</h3>
                   {selectedTask.images?.map(img => (
                     <div key={img.id} style={{ marginBottom: '10px' }}>
-                      <p>{img.name}.{img.format} (позиция: {img.position})</p>
+                      <p><b>{img.name}.{img.format} (позиция: {img.position})</b></p>
                       {imageUrls[img.id] ? (
                         <>
                           <img 
