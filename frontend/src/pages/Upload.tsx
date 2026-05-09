@@ -6,7 +6,7 @@ import './pages.css'
 const API_URL = '/api/v1/task'
 
 export default function Upload() {
-  const { isAuthenticated, tokens, checkTokenExpired, logout } = useAuth()
+  const { isAuthenticated, tokens, checkTokenExpired, logout, userRoles } = useAuth()
     const [files, setFiles] = useState<File[]>([])
     const [width, setWidth] = useState('')
     const [height, setHeight] = useState('')
@@ -24,7 +24,7 @@ export default function Upload() {
       }
     }, [tokenExpired, logout])
 
-    if (tokenExpired || !isAuthenticated) {
+    if (tokenExpired || !isAuthenticated || !userRoles.includes('user')) {
         return <Navigate to="/" replace />
     }
 

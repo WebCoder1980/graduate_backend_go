@@ -22,6 +22,7 @@ interface AuthContextType {
   logout: () => void
   isAuthenticated: boolean
   checkTokenExpired: () => boolean
+  userRoles: string[]
 }
 
 interface KeycloakPayload {
@@ -107,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ tokens, login, register, logout, isAuthenticated: !!tokens, checkTokenExpired }}>
+    <AuthContext.Provider value={{ tokens, login, register, logout, isAuthenticated: !!tokens, checkTokenExpired, userRoles: tokens?.roles || [] }}>
       {children}
     </AuthContext.Provider>
   )

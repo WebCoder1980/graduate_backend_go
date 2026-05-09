@@ -3,7 +3,7 @@ import { useAuth } from '../context/useAuth'
 import {Navigate} from "react-router-dom";
 
 export default function Admin() {
-    const { isAuthenticated, checkTokenExpired, logout } = useAuth()
+    const { isAuthenticated, checkTokenExpired, logout, userRoles } = useAuth()
 
     const tokenExpired = checkTokenExpired()
 
@@ -13,7 +13,7 @@ export default function Admin() {
       }
     }, [tokenExpired, logout])
 
-    if (tokenExpired || !isAuthenticated) {
+    if (tokenExpired || !isAuthenticated || !userRoles.includes('admin')) {
         return <Navigate to="/" replace />
     }
 

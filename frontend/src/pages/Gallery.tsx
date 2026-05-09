@@ -27,7 +27,7 @@ interface Image {
 const API_URL = '/api/v1'
 
 export default function Gallery() {
-  const { isAuthenticated, tokens, checkTokenExpired, logout } = useAuth()
+  const { isAuthenticated, tokens, checkTokenExpired, logout, userRoles } = useAuth()
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(false)
@@ -112,7 +112,7 @@ export default function Gallery() {
     }
   }, [tokenExpired, logout])
 
-  if (tokenExpired || !isAuthenticated) {
+  if (tokenExpired || !isAuthenticated || !userRoles.includes('user')) {
     return <Navigate to="/" replace />
   }
 
