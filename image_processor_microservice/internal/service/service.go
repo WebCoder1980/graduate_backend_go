@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	FormatJPEG string = "jpg"
+	FormatJPG  string = "jpg"
+	FormatJPEG string = "jpeg"
 	FormatPNG  string = "png"
 	FormatWEBP string = "webp"
 )
@@ -217,7 +218,7 @@ func (s *Service) ImageProcess(input []byte, format string, width *int, height *
 	var buf bytes.Buffer
 
 	switch format {
-	case FormatJPEG:
+	case FormatJPG, FormatJPEG:
 		if quality == nil {
 			var q float32 = 0.9
 			quality = &q
