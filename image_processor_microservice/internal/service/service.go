@@ -106,7 +106,7 @@ func (s *Service) ImageGetById(imageId int64, token *string) ([]byte, error) {
 		return nil, errors.New("access denied for non owner")
 	}
 
-	minioFilename := fmt.Sprintf("%d_%d.%s", imageInfo.TaskId, imageInfo.Position, imageInfo.Format)
+	minioFilename := fmt.Sprintf("%d_%d.%s", imageInfo.TaskId, imageInfo.Position, *imageInfo.TargetFormat)
 
 	data, err := s.minioClient.Get(minio.BucketTargetName, minioFilename)
 	if err != nil {
@@ -119,13 +119,12 @@ func (s *Service) ImageGetById(imageId int64, token *string) ([]byte, error) {
 func (s *Service) ServiceImageProcessor(imageRequest *model.ImageRequest) error {
 	imageRequest.StatusId = constant.StatusSuccessful
 
-	targetFormat := imageRequest.Format
-	if imageRequest.TargetFormat != nil {
-		targetFormat = *imageRequest.TargetFormat
+	if imageRequest.TargetFormat == nil {
+		imageRequest.TargetFormat = &imageRequest.Format
 	}
 
 	minioFilenameSource := strconv.FormatInt(imageRequest.TaskId, 10) + "_" + strconv.Itoa(imageRequest.Position) + "." + imageRequest.Format
-	minioFilenameTarget := strconv.FormatInt(imageRequest.TaskId, 10) + "_" + strconv.Itoa(imageRequest.Position) + "." + targetFormat
+	minioFilenameTarget := strconv.FormatInt(imageRequest.TaskId, 10) + "_" + strconv.Itoa(imageRequest.Position) + "." + *imageRequest.TargetFormat
 
 	sourceBytes, err := s.minioClient.Get(minio.BucketSourceName, minioFilenameSource)
 	if err != nil {
@@ -139,7 +138,7 @@ func (s *Service) ServiceImageProcessor(imageRequest *model.ImageRequest) error 
 		return nil
 	}
 
-	targetBytes, err := s.ImageProcess(sourceBytes, targetFormat, imageRequest.Width, imageRequest.Height, imageRequest.Quality)
+	targetBytes, err := s.ImageProcess(sourceBytes, *imageRequest.TargetFormat, imageRequest.Width, imageRequest.Height, imageRequest.Quality)
 	if err != nil {
 		return err
 	}
@@ -149,6 +148,7 @@ func (s *Service) ServiceImageProcessor(imageRequest *model.ImageRequest) error 
 
 	imageId, err := s.postgresql.ImageCreate(*imageRequest)
 	if err != nil {
+		log.Print(err)
 		imageRequest.StatusId = constant.StatusFailed
 		err2 := s.ImageProcessorKafkaWrite(imageRequest)
 		if err2 != nil {
@@ -160,6 +160,7 @@ func (s *Service) ServiceImageProcessor(imageRequest *model.ImageRequest) error 
 
 	err = s.minioClient.Upsert(targetBytes, minioFilenameTarget)
 	if err != nil {
+		log.Print(err)
 		imageRequest.StatusId = constant.StatusFailed
 		err2 := s.ImageProcessorKafkaWrite(imageRequest)
 		if err2 != nil {

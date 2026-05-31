@@ -3,23 +3,23 @@ package model
 import "time"
 
 type ImageInfo struct {
-	Id       int64      `json:"id"`
-	Filename string     `json:"name"`
-	Format   string     `json:"format"`
-	TaskId   int64      `json:"task_id"`
-	Position int        `json:"position"`
-	StatusId int64      `json:"status_id"`
-	EndDT    *time.Time `json:"end_dt"`
-	UserUuid string     `json:"user_uuid"`
+	Id           int64      `json:"id"`
+	Filename     string     `json:"name"`
+	Format       string     `json:"format"`
+	TargetFormat *string    `json:"target_format"`
+	TaskId       int64      `json:"task_id"`
+	Position     int        `json:"position"`
+	StatusId     int64      `json:"status_id"`
+	EndDT        *time.Time `json:"end_dt"`
+	UserUuid     string     `json:"user_uuid"`
 }
 
 type ImageRequest struct {
 	ImageInfo
-	Width        *int     `json:"width"`
-	Height       *int     `json:"height"`
-	TargetFormat *string  `json:"target_format"`
-	Quality      *float32 `json:"quality"`
-	UserUuid     string   `json:"user_uuid"`
+	Width    *int     `json:"width"`
+	Height   *int     `json:"height"`
+	Quality  *float32 `json:"quality"`
+	UserUuid string   `json:"user_uuid"`
 }
 
 type ImageStatus struct {
