@@ -175,7 +175,8 @@ export default function Gallery() {
                         if (imageUrls[img.id]) {
                           const a = document.createElement('a')
                           a.href = imageUrls[img.id]
-                          a.download = `${img.name}.${img.format}`
+                          const ext = selectedTask.format ?? img.format
+                          a.download = `${img.name}.${ext}`
                           document.body.appendChild(a)
                           a.click()
                           document.body.removeChild(a)
@@ -191,7 +192,7 @@ export default function Gallery() {
                   <h3>Изображения</h3>
                   {selectedTask.images?.map(img => (
                     <div key={img.id} style={{ marginBottom: '10px' }}>
-                      <p><b>{img.name}.{img.format} (позиция: {img.position})</b></p>
+                      <p><b>{img.name}.{selectedTask.format ?? img.format} (позиция: {img.position})</b></p>
                       {imageUrls[img.id] ? (
                         <>
                           <img 
@@ -204,7 +205,8 @@ export default function Gallery() {
                             onClick={() => {
                               const a = document.createElement('a')
                               a.href = imageUrls[img.id]
-                              a.download = `${img.name}.${img.format}`
+                              const ext = selectedTask.format ?? img.format
+                              a.download = `${img.name}.${ext}`
                               a.click()
                             }}
                             style={{ marginTop: '5px', padding: '5px 10px', cursor: 'pointer' }}
