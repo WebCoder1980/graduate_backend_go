@@ -15,6 +15,9 @@ export default function Upload() {
     const [uploading, setUploading] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
+    const [imageUrl, setImageUrl] = useState('')
+    const [imageUrls, setImageUrls] = useState<string[]>([])
+    const [urlError, setUrlError] = useState('')
 
     const tokenExpired = checkTokenExpired()
 
@@ -41,9 +44,29 @@ export default function Upload() {
         setFiles(prev => prev.filter((_, i) => i !== index))
     }
 
+    const handleUrlAdd = () => {
+        const url = imageUrl.trim()
+        if (!url) return
+
+        try {
+            new URL(url)
+        } catch {
+            setUrlError('Некорректный URL')
+            return
+        }
+
+        setUrlError('')
+        setImageUrls(prev => [...prev, url])
+        setImageUrl('')
+    }
+
+    const removeUrl = (index: number) => {
+        setImageUrls(prev => prev.filter((_, i) => i !== index))
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (files.length === 0) return
+        if (files.length === 0 && imageUrls.length === 0) return
 
         setUploading(true)
         setError('')
@@ -59,6 +82,7 @@ export default function Upload() {
 
         const formData = new FormData()
         files.forEach(file => formData.append('file', file))
+        imageUrls.forEach(url => formData.append('image_url', url))
 
         try {
             const res = await fetch(url, {
@@ -70,6 +94,7 @@ export default function Upload() {
             const taskId = await res.text()
             setSuccess(`Files uploaded successfully. Task ID: ${taskId}`)
             setFiles([])
+            setImageUrls([])
         } catch {
             setError('Upload failed')
         } finally {
@@ -90,13 +115,30 @@ export default function Upload() {
                         </div>
                         <div className="file-list">
                             {files.map((f, i) => (
-                                <div className="file-item" key={i}>
+                                <div className="file-item" key={`file-${i}`}>
                                     <span>{f.name}</span>
                                     <button type="button" onClick={() => removeFile(i)}>×</button>
                                 </div>
                             ))}
+                            {imageUrls.map((url, i) => (
+                                <div className="file-item" key={`url-${i}`}>
+                                    <span>[URL] {new URL(url).hostname}</span>
+                                    <button type="button" onClick={() => removeUrl(i)}>×</button>
+                                </div>
+                            ))}
                         </div>
                     </div>
+                    <div className="url-input-row">
+                        <input
+                            type="text"
+                            placeholder="Или вставьте прямую ссылку на фото..."
+                            value={imageUrl}
+                            onChange={e => setImageUrl(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleUrlAdd())}
+                        />
+                        <button type="button" className="url-add-btn" onClick={handleUrlAdd}>Добавить</button>
+                    </div>
+                    {urlError && <p className="url-error">{urlError}</p>}
                     <div className="row">
                         <div className="form-group">
                             <label>Ширина</label>
@@ -122,7 +164,7 @@ export default function Upload() {
                             </select>
                         </div>
                     </div>
-                    <button className="submit-btn" type="submit" disabled={uploading || files.length === 0}>
+                    <button className="submit-btn" type="submit" disabled={uploading || (files.length === 0 && imageUrls.length === 0)}>
                         {uploading ? 'Загрузка...' : 'Загрузить'}
                     </button>
                 </form>

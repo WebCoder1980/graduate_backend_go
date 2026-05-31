@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"graduate_backend_task_microservice/internal/constant"
 	"graduate_backend_task_microservice/internal/kafkaproducer"
 	"graduate_backend_task_microservice/internal/minio"
@@ -11,6 +12,7 @@ import (
 	"graduate_backend_task_microservice/internal/security"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -140,7 +142,7 @@ func (s *Service) GetImagesByTaskId(taskId int64, token *string) (model.TaskResp
 	}, nil
 }
 
-func (s *Service) Post(files *multipart.Form, width *int, height *int, targetFormat *string, quality *float64, tokenString *string) (int64, error) {
+func (s *Service) Post(files *multipart.Form, imageUrls []string, width *int, height *int, targetFormat *string, quality *float64, tokenString *string) (int64, error) {
 	if files == nil {
 		return -1, errors.New("файл отсутствует")
 	}
@@ -200,6 +202,72 @@ func (s *Service) Post(files *multipart.Form, width *int, height *int, targetFor
 			return -1, err
 		}
 	}
+
+	position := len(files.File["file"])
+
+	for _, imageUrl := range imageUrls {
+		if imageUrl == "" {
+			continue
+		}
+
+		resp, err := http.Get(imageUrl)
+		if err != nil {
+			return -1, fmt.Errorf("failed to download image from URL: %w", err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			resp.Body.Close()
+			return -1, fmt.Errorf("failed to download image from URL: HTTP %d", resp.StatusCode)
+		}
+
+		contentType := resp.Header.Get("Content-Type")
+		format := "jpg"
+		if strings.HasPrefix(contentType, "image/png") {
+			format = "png"
+		} else if strings.HasPrefix(contentType, "image/webp") {
+			format = "webp"
+		}
+
+		fileBytes, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return -1, fmt.Errorf("failed to read image from URL: %w", err)
+		}
+
+		position++
+
+		imageInfo := model.ImageInfo{
+			TaskId:   taskId,
+			Position: position,
+			StatusId: constant.StatusInWork,
+			Filename: fmt.Sprintf("url_%d", position),
+			Format:   format,
+		}
+
+		imageId, err := s.postgresql.ImageCreate(imageInfo)
+		if err != nil {
+			return -1, err
+		}
+		imageInfo.Id = imageId
+
+		minioFilename := strconv.FormatInt(imageInfo.TaskId, 10) + "_" + strconv.Itoa(imageInfo.Position) + "." + imageInfo.Format
+		s.minioClient.Upsert(fileBytes, minioFilename)
+
+		imageRequest := model.ImageRequest{
+			ImageInfo:    imageInfo,
+			Width:        width,
+			Height:       height,
+			TargetFormat: targetFormat,
+			Quality:      quality,
+			UserUuid:     userUuid,
+		}
+
+		err = s.kafkaProducer.Write(&imageRequest)
+		if err != nil {
+			return -1, err
+		}
+	}
+
 	return taskId, nil
 }
 

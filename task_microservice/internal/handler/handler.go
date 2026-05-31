@@ -94,8 +94,9 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.MultipartForm == nil || len(r.MultipartForm.File) == 0 {
-		writeError(w, http.StatusBadRequest, "No files uploaded")
+	imageUrls := r.MultipartForm.Value["image_url"]
+	if (r.MultipartForm == nil || len(r.MultipartForm.File) == 0) && len(imageUrls) == 0 {
+		writeError(w, http.StatusBadRequest, "No files or URLs provided")
 		return
 	}
 
@@ -137,7 +138,7 @@ func (h *Handler) TaskPost(w http.ResponseWriter, r *http.Request) {
 		quality = &q
 	}
 
-	taskId, err := h.service.Post(r.MultipartForm, width, height, format, quality, &token)
+	taskId, err := h.service.Post(r.MultipartForm, imageUrls, width, height, format, quality, &token)
 	if err != nil {
 		log.Printf("TaskPost error: %v", err)
 		writeError(w, http.StatusInternalServerError, "Failed to create task")
