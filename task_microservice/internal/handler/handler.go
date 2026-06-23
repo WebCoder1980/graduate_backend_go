@@ -196,6 +196,7 @@ func (h *Handler) TaskGetById(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Start() {
 	http.HandleFunc(prefix, h.TaskHandler)
 	http.HandleFunc(prefix+"/{id}", h.TaskIdHandler)
+	http.HandleFunc(prefix+"/stats", h.TaskStatsHandler)
 
 	log.Panic(http.ListenAndServe(":"+os.Getenv("handler_port"), nil))
 }
@@ -224,4 +225,40 @@ func (h *Handler) getToken(r *http.Request) (string, error) {
 	}
 
 	return res, nil
+}
+
+func (h *Handler) TaskStatsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	token, err := h.getToken(r)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "Invalid or missing token")
+		return
+	}
+
+	periodDays := r.URL.Query().Get("period_days")
+	if periodDays == "" {
+		periodDays = "7"
+	}
+
+	period, err := strconv.Atoi(periodDays)
+	if err != nil || period <= 0 {
+		writeError(w, http.StatusBadRequest, "Invalid period_days parameter")
+		return
+	}
+
+	statuses, err := h.service.GetTaskStatusesByDay(period, &token)
+	if err != nil {
+		log.Printf("TaskStatsHandler error: %v", err)
+		writeError(w, http.StatusInternalServerError, "Failed to get task statuses")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(statuses); err != nil {
+		log.Printf("Failed to write response: %v", err)
+	}
 }

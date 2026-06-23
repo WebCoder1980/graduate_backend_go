@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type KafkaProducer interface {
@@ -279,4 +280,23 @@ func (s *Service) TaskUpdateStatus(imageStatus model.ImageStatus) error {
 	}
 
 	return nil
+}
+
+func (s *Service) GetTaskStatusesByDay(periodDays int, token *string) ([]postgresql.TaskStatusByDay, error) {
+	if token == nil {
+		return nil, errors.New("token is required")
+	}
+
+	_, err := s.security.GetSubFromToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	cutoff := time.Now()
+
+	for i := 0; i < periodDays; i++ {
+		cutoff = cutoff.AddDate(0, 0, 1)
+	}
+
+	return s.postgresql.QueryTaskStatusesByDay(cutoff)
 }

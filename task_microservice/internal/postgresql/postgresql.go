@@ -12,6 +12,13 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+type TaskStatusByDay struct {
+	Date       string
+	StatusId   int64
+	StatusName string
+	Count      int64
+}
+
 type PostgreSQL struct {
 	db *sql.DB
 }
@@ -207,4 +214,31 @@ func (p *PostgreSQL) ImageUpdateStatus(imageStatus model.ImageStatus) error {
 	}
 
 	return nil
+}
+
+func (p *PostgreSQL) QueryTaskStatusesByDay(cutoff time.Time) ([]TaskStatusByDay, error) {
+	rows, err := p.db.Query(`
+		SELECT t.created_dt::date as date, (SELECT name FROM image_status WHERE id = i.status_id) as status_name, i.status_id, COUNT(*) as count
+		FROM task t
+		INNER JOIN image i ON i.task_id = t.id
+		WHERE i.end_dt IS NOT NULL AND i.end_dt <= $1
+		GROUP BY t.created_dt::date, i.status_id
+		ORDER BY t.created_dt::date ASC, i.status_id ASC
+	`, cutoff)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := []TaskStatusByDay{}
+	for rows.Next() {
+		var ts TaskStatusByDay
+		err := rows.Scan(&ts.Date, &ts.StatusName, &ts.StatusId, &ts.Count)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, ts)
+	}
+
+	return result, rows.Err()
 }
